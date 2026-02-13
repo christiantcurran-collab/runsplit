@@ -31,7 +31,7 @@ export default function ToolsPage() {
           <h1 className="font-heading font-extrabold text-4xl sm:text-5xl tracking-tight mb-4">
             Free Running Tools
           </h1>
-          <p className="text-zinc-400 text-lg max-w-xl mx-auto">
+          <p className="text-text-dark-sec text-lg max-w-xl mx-auto">
             12 tools. Instant results. No signup. No limits. Built for runners who want real answers.
           </p>
         </div>
@@ -45,7 +45,7 @@ export default function ToolsPage() {
               <Link
                 key={tool.href}
                 href={tool.href}
-                className="group bg-bg-card rounded-xl border border-gray-100 p-6 hover:border-brand/40 hover:shadow-lg transition-all"
+                className="group bg-bg-card rounded-xl border border-[#E4E4E8] p-6 hover:border-brand/40 hover:shadow-lg transition-all"
               >
                 <span className="font-mono text-xs font-bold text-brand/50 tracking-wider">{tool.icon}</span>
                 <h2 className="font-heading font-bold text-lg text-text-primary mt-2 mb-1 group-hover:text-brand transition-colors">
@@ -66,4 +66,3 @@ export default function ToolsPage() {
     </div>
   );
 }
-

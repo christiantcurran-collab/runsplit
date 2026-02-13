@@ -17,21 +17,24 @@ import {
 } from "@/lib/running-math";
 import RaceTime from "@/components/ui/RaceTime";
 import PaceBar from "@/components/ui/PaceBar";
+import { SAMPLE_PLANS } from "@/lib/sample-plans";
 
 const TOOLS = [
-  { href: "/tools/pace", title: "Pace & Speed", description: "Distance + time = pace. Instant results.", icon: "01" },
-  { href: "/tools/predict", title: "What Can I Run?", description: "Predict any race time from a recent result.", icon: "02" },
-  { href: "/tools/splits", title: "Race Split Planner", description: "Plan your splits. Even or negative.", icon: "03" },
-  { href: "/tools/training-paces", title: "Find My Training Paces", description: "Easy, tempo, interval paces from a race.", icon: "04" },
-  { href: "/tools/convert", title: "Pace Converter", description: "Convert between min/km, min/mi, km/h.", icon: "05" },
-  { href: "/tools/age-grade", title: "How Good Is My Time?", description: "Age-graded performance rating.", icon: "06" },
-  { href: "/tools/vo2max", title: "Estimate My VO2max", description: "VO2max and fitness level from any race.", icon: "07" },
-  { href: "/tools/heart-rate", title: "My Heart Rate Zones", description: "5-zone training with Karvonen method.", icon: "08" },
-  { href: "/tools/calories", title: "Calories Burned", description: "Estimate calories from distance and weight.", icon: "09" },
-  { href: "/tools/treadmill", title: "Treadmill vs Outdoor", description: "Convert treadmill incline to road effort.", icon: "10" },
-  { href: "/tools/negative-split", title: "Negative Split Strategy", description: "Start slower, finish stronger.", icon: "11" },
-  { href: "/tools/run-walk", title: "Run/Walk Planner", description: "Run/walk intervals for any distance.", icon: "12" },
+  { href: "/tools/pace", title: "Pace & Speed", description: "Distance + time = pace.", icon: "01" },
+  { href: "/tools/predict", title: "What Can I Run?", description: "Predict any race time.", icon: "02" },
+  { href: "/tools/splits", title: "Race Split Planner", description: "Even or negative splits.", icon: "03" },
+  { href: "/tools/training-paces", title: "Training Paces", description: "5-zone training paces.", icon: "04" },
+  { href: "/tools/convert", title: "Pace Converter", description: "km ↔ mile ↔ km/h.", icon: "05" },
+  { href: "/tools/age-grade", title: "Performance Grade", description: "Age-graded rating.", icon: "06" },
+  { href: "/tools/vo2max", title: "VO2max Estimator", description: "Fitness from race data.", icon: "07" },
+  { href: "/tools/heart-rate", title: "Heart Rate Zones", description: "Karvonen 5-zone.", icon: "08" },
 ];
+
+const LEVEL_COLORS: Record<string, string> = {
+  Beginner: "bg-green-400/10 text-green-400",
+  Intermediate: "bg-brand/10 text-brand-hover",
+  Advanced: "bg-purple-400/10 text-purple-400",
+};
 
 export default function HomePage() {
   const [selectedDist, setSelectedDist] = useState<string>("marathon");
@@ -50,7 +53,6 @@ export default function HomePage() {
     const trainingPaces = calculateTrainingPaces(distMeters, totalSec);
     const distName = DISTANCES[selectedDist as DistanceKey]?.name || "Race";
 
-    // Equivalent times
     const equivalents = Object.entries(DISTANCES)
       .filter(([key]) => key !== selectedDist)
       .slice(0, 4)
@@ -75,99 +77,125 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero — full viewport, dark */}
-      <section className="bg-bg-dark text-text-on-dark min-h-[90vh] flex items-center relative overflow-hidden">
-        {/* Subtle gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-bg-dark via-bg-dark to-brand/5" />
+      {/* ─── HERO — full dark ─── */}
+      <section className="bg-bg-dark text-text-on-dark min-h-[100vh] flex flex-col items-center justify-center text-center relative overflow-hidden">
+        {/* Gradient underlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg-dark pointer-events-none" />
 
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-6xl leading-[1.1] mb-6 tracking-tight">
-              Know Your Numbers.
-              <br />
-              <span className="text-brand">Run Your Best.</span>
-            </h1>
-            <p className="text-zinc-400 text-lg sm:text-xl max-w-xl mx-auto leading-relaxed">
-              AI-powered pacing, race predictions, and custom training plans for runners who take it seriously.
-            </p>
-          </div>
+        <div className="relative z-10 px-4 sm:px-6 lg:px-8 py-28 w-full max-w-[540px] mx-auto">
+          {/* Eyebrow */}
+          <motion.p
+            className="font-mono text-[11px] tracking-[4px] uppercase text-brand mb-7"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            AI Running Intelligence
+          </motion.p>
+
+          {/* Headline */}
+          <motion.h1
+            className="font-heading font-extrabold text-[clamp(38px,5.5vw,64px)] leading-[1.08] mb-5 tracking-tight"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            From data
+            <br />
+            to{" "}
+            <span className="bg-gradient-to-r from-brand to-brand-hover bg-clip-text text-transparent">
+              finish line.
+            </span>
+          </motion.h1>
+
+          {/* Sub */}
+          <motion.p
+            className="text-base text-text-dark-sec max-w-[460px] mx-auto leading-[1.7] mb-12"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+          >
+            Connect your watch. Set your goal. Get AI-powered pacing, plans, and coaching — built on your actual running data.
+          </motion.p>
 
           {/* Smart Input */}
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-white/[0.04] backdrop-blur border border-white/[0.08] rounded-2xl p-6 sm:p-8">
-              <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 sm:gap-6">
-                <div className="flex-1 w-full">
-                  <label className="block text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
-                    I want to run a
-                  </label>
-                  <select
-                    value={selectedDist}
-                    onChange={(e) => setSelectedDist(e.target.value)}
-                    className="w-full h-12 bg-white/[0.08] border border-white/[0.12] text-white font-heading font-semibold text-lg rounded-lg px-4 focus:outline-none focus:border-brand focus:shadow-glow transition-all appearance-none cursor-pointer"
-                  >
-                    {Object.entries(DISTANCES).map(([key, d]) => (
-                      <option key={key} value={key} className="bg-bg-dark text-white">
-                        {d.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
-                    in
-                  </label>
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      min={0} max={99}
-                      value={targetH}
-                      onChange={(e) => setTargetH(Number(e.target.value) || 0)}
-                      className="w-14 h-12 text-center font-mono text-xl bg-white/[0.08] border border-white/[0.12] text-white rounded-lg focus:outline-none focus:border-brand focus:shadow-glow transition-all"
-                    />
-                    <span className="font-mono text-2xl font-bold text-white/30">:</span>
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      min={0} max={59}
-                      value={targetM}
-                      onChange={(e) => setTargetM(Math.min(59, Number(e.target.value) || 0))}
-                      className="w-14 h-12 text-center font-mono text-xl bg-white/[0.08] border border-white/[0.12] text-white rounded-lg focus:outline-none focus:border-brand focus:shadow-glow transition-all"
-                    />
-                    <span className="font-mono text-2xl font-bold text-white/30">:</span>
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      min={0} max={59}
-                      value={targetS}
-                      onChange={(e) => setTargetS(Math.min(59, Number(e.target.value) || 0))}
-                      className="w-14 h-12 text-center font-mono text-xl bg-white/[0.08] border border-white/[0.12] text-white rounded-lg focus:outline-none focus:border-brand focus:shadow-glow transition-all"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setShowResults(true)}
-                disabled={totalSec <= 0}
-                className="w-full mt-6 bg-brand hover:bg-brand-hover text-white font-heading font-semibold py-3.5 rounded-xl text-base transition-all disabled:opacity-40 hover:shadow-glow"
+          <motion.div
+            className="bg-bg-dark-card border border-bg-dark-border rounded-2xl px-7 py-7 w-full"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
+          >
+            <div className="flex items-center justify-center gap-2.5 flex-wrap text-[15px] text-text-dark-sec">
+              <span>I want to run a</span>
+              <select
+                value={selectedDist}
+                onChange={(e) => setSelectedDist(e.target.value)}
+                className="bg-bg-dark-input border border-bg-dark-border text-text-on-dark font-body text-sm px-3 py-2 rounded-md appearance-none cursor-pointer focus:outline-none focus:border-brand focus:shadow-glow"
               >
-                Show me what I need →
-              </button>
+                {Object.entries(DISTANCES).map(([key, d]) => (
+                  <option key={key} value={key} className="bg-bg-dark text-white">
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+              <span>in</span>
+              <div className="flex items-center gap-[3px]">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={99}
+                  value={targetH}
+                  onChange={(e) => setTargetH(Number(e.target.value) || 0)}
+                  className="w-[46px] text-center font-mono text-lg font-semibold bg-bg-dark-input border border-bg-dark-border text-text-on-dark rounded-md px-1 py-2 focus:outline-none focus:border-brand focus:shadow-glow"
+                />
+                <span className="font-mono text-lg text-text-dark-muted">:</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={59}
+                  value={targetM}
+                  onChange={(e) => setTargetM(Math.min(59, Number(e.target.value) || 0))}
+                  className="w-[46px] text-center font-mono text-lg font-semibold bg-bg-dark-input border border-bg-dark-border text-text-on-dark rounded-md px-1 py-2 focus:outline-none focus:border-brand focus:shadow-glow"
+                />
+                <span className="font-mono text-lg text-text-dark-muted">:</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={59}
+                  value={targetS}
+                  onChange={(e) => setTargetS(Math.min(59, Number(e.target.value) || 0))}
+                  className="w-[46px] text-center font-mono text-lg font-semibold bg-bg-dark-input border border-bg-dark-border text-text-on-dark rounded-md px-1 py-2 focus:outline-none focus:border-brand focus:shadow-glow"
+                />
+              </div>
             </div>
 
-            <p className="text-center text-sm text-zinc-600 mt-4">
-              or{" "}
-              <Link href="/signup" className="text-brand hover:text-brand-hover font-medium transition-colors">
-                connect Strava to start from your actual data →
-              </Link>
-            </p>
-          </div>
+            <button
+              onClick={() => setShowResults(true)}
+              disabled={totalSec <= 0}
+              className="w-full mt-5 bg-brand hover:bg-brand-hover text-white font-heading text-sm font-bold py-[13px] rounded-lg transition-all disabled:opacity-40"
+            >
+              Show me what I need →
+            </button>
+          </motion.div>
+
+          <motion.p
+            className="text-[13px] text-text-dark-muted mt-4"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 1 }}
+          >
+            or{" "}
+            <Link href="/signup" className="text-brand hover:text-brand-hover transition-colors">
+              connect Strava to start from your real data →
+            </Link>
+          </motion.p>
         </div>
       </section>
 
-      {/* Analysis Results (appears after clicking button) */}
+      {/* ─── RESULTS (light contrast) ─── */}
       <AnimatePresence>
         {showResults && analysis && (
           <motion.section
@@ -176,89 +204,131 @@ export default function HomePage() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="text-center mb-10">
-                <h2 className="font-heading font-bold text-2xl sm:text-3xl text-text-primary mb-2">
-                  Your {analysis.distName} Breakdown
-                </h2>
-                <p className="text-text-secondary">
-                  Here&apos;s what it takes to run {formatTimeFromSeconds(totalSec)}
+            <div className="max-w-[920px] mx-auto px-4 sm:px-6 lg:px-10">
+              {/* Section label */}
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-2 h-2 rounded-full bg-brand animate-pulse" />
+                <span className="font-heading text-[13px] font-semibold uppercase tracking-[1.5px] text-text-secondary">
+                  Live Analysis — {analysis.distName} at {formatTimeFromSeconds(totalSec)}
+                </span>
+              </div>
+
+              {/* Hero result card */}
+              <div className="bg-bg-card border border-[#E4E4E8] rounded-2xl p-10 text-center relative overflow-hidden mb-5">
+                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-brand to-brand-hover" />
+                <div className="font-mono text-[10px] uppercase tracking-[2.5px] text-text-muted mb-3">
+                  Required Race Pace
+                </div>
+                <RaceTime value={`${analysis.paceDisplay}/km`} size="hero" />
+                <p className="mt-4 text-[15px] text-text-secondary">
+                  You&apos;re in the{" "}
+                  <span className="inline-block bg-brand-dim text-brand px-2.5 py-[3px] rounded-md font-semibold text-[13px]">
+                    {analysis.paceSecKm < 240
+                      ? "Elite"
+                      : analysis.paceSecKm < 300
+                      ? "Sub-elite"
+                      : analysis.paceSecKm < 360
+                      ? "Club Runner"
+                      : "Recreational"}
+                  </span>{" "}
+                  range.
                 </p>
               </div>
 
-              {/* Race pace hero */}
-              <div className="bg-bg-card rounded-2xl border border-gray-100 shadow-sm p-8 mb-6">
-                <div className="text-center mb-6">
-                  <span className="text-xs font-medium text-text-muted uppercase tracking-wider">Required Race Pace</span>
-                  <div className="mt-2">
-                    <RaceTime value={`${analysis.paceDisplay}/km`} size="xl" />
+              {/* Metrics strip */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                <div className="bg-bg-card border border-[#E4E4E8] rounded-xl p-5">
+                  <div className="font-mono text-[10px] uppercase tracking-[2px] text-text-muted mb-2">Easy Pace</div>
+                  <div className="font-mono text-[28px] font-bold text-text-primary">{analysis.trainingPaces.easy.split("-")[0]}</div>
+                  <div className="text-xs text-text-secondary mt-0.5">/km</div>
+                </div>
+                <div className="bg-bg-card border border-[#E4E4E8] rounded-xl p-5">
+                  <div className="font-mono text-[10px] uppercase tracking-[2px] text-text-muted mb-2">Tempo</div>
+                  <div className="font-mono text-[28px] font-bold text-text-primary">{analysis.trainingPaces.tempo.split("-")[0]}</div>
+                  <div className="text-xs text-text-secondary mt-0.5">/km</div>
+                </div>
+                <div className="bg-bg-card border border-[#E4E4E8] rounded-xl p-5">
+                  <div className="font-mono text-[10px] uppercase tracking-[2px] text-text-muted mb-2">Interval</div>
+                  <div className="font-mono text-[28px] font-bold text-text-primary">{analysis.trainingPaces.interval.split("-")[0]}</div>
+                  <div className="text-xs text-text-secondary mt-0.5">/km</div>
+                </div>
+                {analysis.equivalents[0] && (
+                  <div className="bg-bg-card border border-[#E4E4E8] rounded-xl p-5">
+                    <div className="font-mono text-[10px] uppercase tracking-[2px] text-text-muted mb-2">{analysis.equivalents[0].name}</div>
+                    <div className="font-mono text-[28px] font-bold text-text-primary">{analysis.equivalents[0].time}</div>
+                    <div className="text-xs text-text-secondary mt-0.5 font-mono">{analysis.equivalents[0].pace}/km</div>
                   </div>
+                )}
+              </div>
+
+              {/* Pace bar */}
+              <div className="bg-bg-card border border-[#E4E4E8] rounded-xl p-6">
+                <div className="font-mono text-[10px] uppercase tracking-[2px] text-text-muted mb-4">
+                  Performance Spectrum
                 </div>
                 <PaceBar pacePerKm={analysis.paceSecKm} />
               </div>
 
-              {/* Training paces + equivalents */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-                <div className="bg-bg-card rounded-2xl border border-gray-100 shadow-sm p-6">
-                  <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-4">
-                    Your Training Paces
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-text-secondary">Easy</span>
-                      <span className="font-mono font-semibold text-lg text-text-primary">{analysis.trainingPaces.easy}/km</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-text-secondary">Tempo</span>
-                      <span className="font-mono font-semibold text-lg text-text-primary">{analysis.trainingPaces.tempo}/km</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-text-secondary">Interval</span>
-                      <span className="font-mono font-semibold text-lg text-text-primary">{analysis.trainingPaces.interval}/km</span>
-                    </div>
-                  </div>
+              {/* Equivalents */}
+              <div className="bg-bg-card border border-[#E4E4E8] rounded-xl p-6 mt-5">
+                <div className="font-mono text-[10px] uppercase tracking-[2px] text-text-muted mb-4">
+                  Equivalent Race Times
                 </div>
-
-                <div className="bg-bg-card rounded-2xl border border-gray-100 shadow-sm p-6">
-                  <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-4">
-                    Equivalent Race Times
-                  </h3>
-                  <div className="space-y-4">
-                    {analysis.equivalents.map((eq) => (
-                      <div key={eq.name} className="flex items-center justify-between">
-                        <span className="text-sm text-text-secondary">{eq.name}</span>
-                        <div className="text-right">
-                          <span className="font-mono font-semibold text-lg text-text-primary">{eq.time}</span>
-                          <span className="text-xs text-text-muted ml-2">{eq.pace}/km</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {analysis.equivalents.map((eq) => (
+                    <div key={eq.name} className="bg-bg-page rounded-lg p-3.5">
+                      <div className="font-mono text-[9px] uppercase tracking-[1.5px] text-text-muted mb-1.5">{eq.name}</div>
+                      <div className="font-mono text-xl font-bold text-text-primary">{eq.time}</div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-
-              {/* CTA */}
-              <div className="bg-gradient-to-r from-brand to-brand-hover rounded-2xl p-8 text-center text-white">
-                <h3 className="font-heading font-bold text-xl sm:text-2xl mb-3">
-                  Get a personalised training plan for {formatTimeFromSeconds(totalSec)}
-                </h3>
-                <p className="text-white/80 mb-6 max-w-md mx-auto">
-                  Our AI coach will build a plan around your fitness, schedule, and this goal.
-                </p>
-                <Link
-                  href="/signup"
-                  className="inline-block bg-white text-brand font-heading font-bold px-8 py-3.5 rounded-xl hover:bg-gray-100 transition-colors"
-                >
-                  Start Free Trial →
-                </Link>
               </div>
             </div>
           </motion.section>
         )}
       </AnimatePresence>
 
-      {/* Section 2: Powered by your data */}
-      <section className="bg-bg-page py-16 sm:py-20 border-t border-gray-100">
+      {/* ─── SAMPLE PLANS ─── */}
+      <section className="bg-bg-page py-16 sm:py-20 border-t border-[#E4E4E8]">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="font-heading font-bold text-2xl sm:text-3xl text-text-primary mb-3">
+              Free training plans
+            </h2>
+            <p className="text-text-secondary text-base sm:text-lg max-w-lg mx-auto">
+              Browse sample plans for every level — then upgrade to Pro for a plan built around <em>your</em> data.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {SAMPLE_PLANS.slice(0, 3).map((plan) => (
+              <Link
+                key={plan.slug}
+                href={`/plans/${plan.slug}`}
+                className="group bg-bg-card border border-[#E4E4E8] rounded-xl p-6 hover:border-brand/40 hover:shadow-lg transition-all"
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${LEVEL_COLORS[plan.level] || ""}`}>
+                    {plan.level}
+                  </span>
+                  <span className="text-[11px] text-text-muted">{plan.weeks}w · {plan.daysPerWeek}×/wk</span>
+                </div>
+                <h3 className="font-heading font-bold text-base text-text-primary group-hover:text-brand transition-colors mb-1">
+                  {plan.title}
+                </h3>
+                <p className="text-sm text-text-secondary leading-relaxed">{plan.subtitle}</p>
+              </Link>
+            ))}
+          </div>
+          <div className="text-center mt-6">
+            <Link href="/plans" className="text-sm font-medium text-brand hover:text-brand-hover transition-colors">
+              View all {SAMPLE_PLANS.length} free plans →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── HOW IT WORKS ─── */}
+      <section className="bg-bg-page py-16 sm:py-20 border-t border-[#E4E4E8]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-heading font-bold text-2xl sm:text-3xl text-text-primary mb-3">
@@ -274,7 +344,7 @@ export default function HomePage() {
               { step: "02", title: "AI Analyses", desc: "Your history, fitness trends, strengths, and limiters — analysed instantly." },
               { step: "03", title: "You Get", desc: "A training plan that actually fits your life and your goals." },
             ].map((item) => (
-              <div key={item.step} className="bg-bg-card rounded-2xl border border-gray-100 p-6 shadow-sm">
+              <div key={item.step} className="bg-bg-card rounded-xl border border-[#E4E4E8] p-6">
                 <span className="font-mono text-xs font-bold text-brand tracking-wider">{item.step}</span>
                 <h3 className="font-heading font-bold text-lg text-text-primary mt-3 mb-2">{item.title}</h3>
                 <p className="text-sm text-text-secondary leading-relaxed">{item.desc}</p>
@@ -284,82 +354,58 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Section 3: Free tools grid */}
+      {/* ─── FREE TOOLS — dark ─── */}
       <section className="bg-bg-dark text-text-on-dark py-16 sm:py-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="font-heading font-bold text-2xl sm:text-3xl mb-3">
-              Free tools, no signup
+            <h2 className="font-heading font-extrabold text-[28px] mb-2">
+              Free Tools. No Signup.
             </h2>
-            <p className="text-zinc-400 text-lg">
-              12 running tools. Instant results. Unlimited use.
+            <p className="text-text-dark-sec text-[15px]">
+              12 tools. Instant results. Unlimited.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
             {TOOLS.map((tool) => (
               <Link
                 key={tool.href}
                 href={tool.href}
-                className="group bg-white/[0.04] border border-white/[0.08] rounded-xl p-5 hover:border-brand/50 hover:bg-white/[0.06] transition-all"
+                className="group bg-bg-dark-card border border-bg-dark-border rounded-[10px] p-[18px] hover:border-brand hover:-translate-y-0.5 transition-all"
               >
-                <span className="font-mono text-xs font-bold text-brand/60 tracking-wider">{tool.icon}</span>
-                <h3 className="font-heading font-semibold text-white mt-2 mb-1 group-hover:text-brand transition-colors">
-                  {tool.title}
-                </h3>
-                <p className="text-sm text-zinc-500 leading-relaxed">{tool.description}</p>
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-brand mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                  Open tool
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </span>
+                <div className="font-mono text-[10px] text-text-dark-muted mb-2.5">{tool.icon}</div>
+                <div className="font-heading text-sm font-bold text-text-on-dark mb-1">{tool.title}</div>
+                <div className="text-xs text-text-dark-sec">{tool.description}</div>
               </Link>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* Section 4: Pro CTA */}
-      <section className="py-16 sm:py-20 bg-gradient-to-br from-brand/5 via-bg-page to-bg-page">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-heading font-extrabold text-3xl sm:text-4xl text-text-primary mb-4">
-            Your AI coach is ready.
-          </h2>
-          <p className="text-text-secondary text-lg max-w-xl mx-auto mb-8 leading-relaxed">
-            Connect your Strava. Tell us your goal. Get a plan built around your fitness, your schedule, and your life — not a generic PDF.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
-            <Link
-              href="/signup"
-              className="bg-brand hover:bg-brand-hover text-white font-heading font-bold px-8 py-4 rounded-xl text-lg transition-colors shadow-glow"
-            >
-              Start Free Trial
+          <div className="text-center mt-8">
+            <Link href="/tools" className="text-sm font-medium text-brand hover:text-brand-hover transition-colors">
+              View all 12 tools →
             </Link>
           </div>
-          <p className="text-sm text-text-muted">
-            £4.99/month · Cancel anytime · 7-day free trial
-          </p>
         </div>
       </section>
 
-      {/* Section 5: Stats */}
-      <section className="bg-bg-dark text-text-on-dark py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-3 gap-8 text-center">
-            <div>
-              <div className="font-mono font-bold text-3xl sm:text-4xl text-brand">12</div>
-              <div className="text-xs text-zinc-500 mt-1 uppercase tracking-wider">Free Tools</div>
-            </div>
-            <div>
-              <div className="font-mono font-bold text-3xl sm:text-4xl text-brand">0</div>
-              <div className="text-xs text-zinc-500 mt-1 uppercase tracking-wider">Signup Required</div>
-            </div>
-            <div>
-              <div className="font-mono font-bold text-3xl sm:text-4xl text-brand">AI</div>
-              <div className="text-xs text-zinc-500 mt-1 uppercase tracking-wider">Powered Coach</div>
-            </div>
-          </div>
+      {/* ─── PRO CTA ─── */}
+      <section className="bg-bg-page py-16 sm:py-20 border-t-[3px] border-brand">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="font-heading font-extrabold text-[32px] text-text-primary mb-3">
+            Your AI coach is ready.
+          </h2>
+          <p className="text-text-secondary text-base max-w-[440px] mx-auto leading-[1.6] mb-7">
+            Connect Strava. Set your goal. Get a plan built for your fitness, your schedule, your life.
+          </p>
+          <Link
+            href="/signup"
+            className="inline-block bg-brand hover:bg-brand-hover text-white font-heading text-[15px] font-bold px-9 py-3.5 rounded-[10px] transition-all hover:-translate-y-0.5"
+          >
+            Get started — £4.99/month
+          </Link>
+          <p className="text-[13px] text-text-muted mt-3">
+            Cancel anytime. No free trial — just results.
+          </p>
         </div>
       </section>
     </div>

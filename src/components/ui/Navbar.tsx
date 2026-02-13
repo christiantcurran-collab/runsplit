@@ -9,30 +9,34 @@ export default function Navbar() {
   const { user, loading, signOut } = useAuth();
 
   return (
-    <header className="bg-bg-dark text-text-on-dark sticky top-0 z-50 border-b border-white/[0.06]">
+    <header className="sticky top-0 z-50 bg-[rgba(12,12,15,0.95)] backdrop-blur-[20px]">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center font-heading font-extrabold text-sm text-white group-hover:scale-105 transition-transform">
-              R
-            </div>
-            <span className="font-heading font-bold text-xl tracking-tight">
-              Run<span className="text-brand">Split</span>
+            <div className="w-6 h-[3px] bg-brand rounded-sm" />
+            <span className="font-heading font-bold text-lg text-text-on-dark tracking-tight">
+              RunSplit
             </span>
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-7">
             <Link
               href="/tools"
-              className="px-3 py-2 text-sm font-medium text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-all"
+              className="text-[13px] font-medium text-text-dark-sec hover:text-white transition-colors"
             >
               Tools
             </Link>
             <Link
+              href="/plans"
+              className="text-[13px] font-medium text-text-dark-sec hover:text-white transition-colors"
+            >
+              Plans
+            </Link>
+            <Link
               href="/pricing"
-              className="px-3 py-2 text-sm font-medium text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-all"
+              className="text-[13px] font-medium text-text-dark-sec hover:text-white transition-colors"
             >
               Pricing
             </Link>
@@ -43,42 +47,36 @@ export default function Navbar() {
                   <>
                     <Link
                       href="/coach"
-                      className="px-3 py-2 text-sm font-medium text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-all flex items-center gap-1.5"
+                      className="text-[13px] font-medium text-text-dark-sec hover:text-white transition-colors"
                     >
                       Coach
-                      <span className="text-[10px] font-bold bg-brand/20 text-brand px-1.5 py-0.5 rounded">PRO</span>
                     </Link>
-                    <div className="w-px h-5 bg-white/10 mx-2" />
                     <Link
                       href="/settings"
-                      className="px-3 py-2 text-sm font-medium text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-all"
+                      className="text-[13px] font-medium text-text-dark-sec hover:text-white transition-colors"
                     >
                       Settings
                     </Link>
                     <button
                       onClick={signOut}
-                      className="px-3 py-2 text-sm font-medium text-zinc-500 hover:text-white rounded-lg hover:bg-white/[0.06] transition-all"
+                      className="text-[13px] font-medium text-text-dark-muted hover:text-white transition-colors"
                     >
                       Sign Out
                     </button>
                   </>
                 ) : (
                   <>
-                    <div className="w-px h-5 bg-white/10 mx-2" />
                     <Link
                       href="/login"
-                      className="px-3 py-2 text-sm font-medium text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-all"
+                      className="text-[13px] font-medium text-text-dark-sec hover:text-white transition-colors"
                     >
                       Log In
                     </Link>
                     <Link
                       href="/signup"
-                      className="ml-1 bg-brand hover:bg-brand-hover text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5"
+                      className="bg-brand text-white text-[13px] font-semibold px-4 py-[7px] rounded-md hover:bg-brand-hover transition-colors"
                     >
                       Pro
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
                     </Link>
                   </>
                 )}
@@ -88,7 +86,7 @@ export default function Navbar() {
 
           {/* Mobile hamburger */}
           <button
-            className="md:hidden text-zinc-400 hover:text-white p-2 -mr-2"
+            className="md:hidden text-text-dark-sec hover:text-white p-2 -mr-2"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
           >
@@ -104,34 +102,37 @@ export default function Navbar() {
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="md:hidden pb-4 border-t border-white/[0.06]">
+          <div className="md:hidden pb-4 border-t border-bg-dark-border">
             <div className="flex flex-col gap-1 pt-3">
-              <Link href="/tools" className="px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06]" onClick={() => setMobileOpen(false)}>
+              <Link href="/tools" className="px-3 py-2.5 text-sm font-medium text-text-dark-sec hover:text-white" onClick={() => setMobileOpen(false)}>
                 Tools
               </Link>
-              <Link href="/pricing" className="px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06]" onClick={() => setMobileOpen(false)}>
+              <Link href="/plans" className="px-3 py-2.5 text-sm font-medium text-text-dark-sec hover:text-white" onClick={() => setMobileOpen(false)}>
+                Plans
+              </Link>
+              <Link href="/pricing" className="px-3 py-2.5 text-sm font-medium text-text-dark-sec hover:text-white" onClick={() => setMobileOpen(false)}>
                 Pricing
               </Link>
               {!loading && user ? (
                 <>
-                  <Link href="/coach" className="px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06]" onClick={() => setMobileOpen(false)}>
-                    Coach <span className="text-[10px] font-bold bg-brand/20 text-brand px-1.5 py-0.5 rounded ml-1">PRO</span>
+                  <Link href="/coach" className="px-3 py-2.5 text-sm font-medium text-text-dark-sec hover:text-white" onClick={() => setMobileOpen(false)}>
+                    Coach
                   </Link>
-                  <Link href="/settings" className="px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06]" onClick={() => setMobileOpen(false)}>
+                  <Link href="/settings" className="px-3 py-2.5 text-sm font-medium text-text-dark-sec hover:text-white" onClick={() => setMobileOpen(false)}>
                     Settings
                   </Link>
-                  <button onClick={() => { signOut(); setMobileOpen(false); }} className="px-3 py-2.5 text-sm font-medium text-zinc-500 hover:text-white rounded-lg hover:bg-white/[0.06] text-left">
+                  <button onClick={() => { signOut(); setMobileOpen(false); }} className="px-3 py-2.5 text-sm font-medium text-text-dark-muted hover:text-white text-left">
                     Sign Out
                   </button>
                 </>
               ) : (
                 <>
-                  <div className="border-t border-white/[0.06] my-1" />
-                  <Link href="/login" className="px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06]" onClick={() => setMobileOpen(false)}>
+                  <div className="border-t border-bg-dark-border my-1" />
+                  <Link href="/login" className="px-3 py-2.5 text-sm font-medium text-text-dark-sec hover:text-white" onClick={() => setMobileOpen(false)}>
                     Log In
                   </Link>
-                  <Link href="/signup" className="mx-3 mt-1 bg-brand hover:bg-brand-hover text-white text-sm font-semibold px-4 py-2.5 rounded-lg text-center" onClick={() => setMobileOpen(false)}>
-                    Start Free Trial
+                  <Link href="/signup" className="mx-3 mt-1 bg-brand hover:bg-brand-hover text-white text-sm font-semibold px-4 py-2.5 rounded-md text-center" onClick={() => setMobileOpen(false)}>
+                    Get Pro
                   </Link>
                 </>
               )}

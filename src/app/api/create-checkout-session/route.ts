@@ -47,7 +47,6 @@ export async function POST() {
       success_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/plan?subscribed=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/pricing`,
       subscription_data: {
-        trial_period_days: 7,
         metadata: { supabase_user_id: user.id },
       },
     });

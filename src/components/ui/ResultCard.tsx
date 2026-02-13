@@ -26,13 +26,13 @@ export default function ResultCard({
       className={`rounded-xl p-5 transition-shadow hover:shadow-md ${
         highlight
           ? "bg-white border-2 border-brand shadow-glow"
-          : "bg-white border border-gray-100 shadow-sm"
+          : "bg-white border border-[#E4E4E8] shadow-sm"
       }`}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut", delay }}
     >
-      <div className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
+      <div className="font-mono text-[10px] uppercase tracking-[2px] text-text-muted mb-2">
         {label}
       </div>
       <div
@@ -48,11 +48,12 @@ export default function ResultCard({
         )}
         {trend && trend !== "neutral" && (
           <span
-            className={`inline-flex items-center gap-0.5 text-xs font-medium ${
+            className={`inline-flex items-center gap-0.5 font-mono text-[11px] font-medium ${
               trend === "down" ? "text-success" : "text-danger"
             }`}
           >
-            {trend === "down" ? "▼" : "▲"}
+            {trend === "down" ? "↗ " : "↘ "}
+            {trend === "down" ? "Improving" : "Slower"}
           </span>
         )}
       </div>

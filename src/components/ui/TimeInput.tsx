@@ -25,15 +25,15 @@ export default function TimeInput({
   const secRef = useRef<HTMLInputElement>(null);
 
   const inputClasses = dark
-    ? "bg-white/[0.08] border border-white/[0.12] text-text-on-dark font-mono text-xl text-center rounded-lg focus:outline-none focus:border-brand focus:shadow-glow transition-all"
+    ? "bg-bg-dark-input border border-bg-dark-border text-text-on-dark font-mono text-xl text-center rounded-lg focus:outline-none focus:border-brand focus:shadow-glow transition-all"
     : "bg-bg-subtle border border-transparent text-text-primary font-mono text-xl text-center rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all";
 
   const labelClasses = dark
-    ? "block text-xs font-medium text-text-muted uppercase tracking-wider mb-2"
+    ? "block font-mono text-[10px] uppercase tracking-[2px] text-text-dark-muted mb-2.5"
     : "block text-xs font-medium text-text-secondary uppercase tracking-wider mb-2";
 
   const colonClasses = dark
-    ? "font-mono text-2xl font-bold text-white/30"
+    ? "font-mono text-2xl text-text-dark-muted"
     : "font-mono text-2xl font-bold text-text-muted";
 
   const handleHourChange = (val: string) => {
@@ -56,7 +56,7 @@ export default function TimeInput({
   return (
     <div>
       <label className={labelClasses}>{label}</label>
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1">
         {showHours && (
           <>
             <input
@@ -66,7 +66,7 @@ export default function TimeInput({
               max={99}
               value={hours}
               onChange={(e) => handleHourChange(e.target.value)}
-              className={`w-16 h-12 ${inputClasses}`}
+              className={`w-14 h-12 ${inputClasses}`}
               placeholder="HH"
             />
             <span className={colonClasses}>:</span>
@@ -80,7 +80,7 @@ export default function TimeInput({
           max={59}
           value={minutes}
           onChange={(e) => handleMinChange(e.target.value)}
-          className={`w-16 h-12 ${inputClasses}`}
+          className={`w-14 h-12 ${inputClasses}`}
           placeholder="MM"
         />
         <span className={colonClasses}>:</span>
@@ -92,7 +92,7 @@ export default function TimeInput({
           max={59}
           value={seconds}
           onChange={(e) => handleSecChange(e.target.value)}
-          className={`w-16 h-12 ${inputClasses}`}
+          className={`w-14 h-12 ${inputClasses}`}
           placeholder="SS"
         />
       </div>

@@ -32,25 +32,24 @@ export default function DistanceSelect({
   compact = false,
 }: DistanceSelectProps) {
   const labelClasses = dark
-    ? "block text-xs font-medium text-text-muted uppercase tracking-wider mb-2"
+    ? "block font-mono text-[10px] uppercase tracking-[2px] text-text-dark-muted mb-2.5"
     : "block text-xs font-medium text-text-secondary uppercase tracking-wider mb-2";
 
   if (compact) {
-    // Pill selector for quick picks
     return (
       <div>
         <label className={labelClasses}>{label}</label>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {QUICK_DISTANCES.map((d) => (
             <button
               key={d.key}
               type="button"
               onClick={() => onChange(d.key, DISTANCES[d.key as DistanceKey].meters)}
-              className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+              className={`px-3.5 py-[7px] rounded-md text-[13px] font-semibold transition-all ${
                 value === d.key
-                  ? "bg-brand text-white shadow-glow"
+                  ? "bg-brand text-white"
                   : dark
-                  ? "bg-white/[0.08] text-white/70 border border-white/[0.12] hover:border-white/30"
+                  ? "bg-transparent text-text-dark-sec border border-bg-dark-border hover:border-text-dark-sec"
                   : "bg-bg-subtle text-text-secondary border border-transparent hover:border-gray-300"
               }`}
             >
@@ -61,11 +60,11 @@ export default function DistanceSelect({
             <button
               type="button"
               onClick={() => onChange("custom", customMeters)}
-              className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+              className={`px-3.5 py-[7px] rounded-md text-[13px] font-semibold transition-all ${
                 value === "custom"
-                  ? "bg-brand text-white shadow-glow"
+                  ? "bg-brand text-white"
                   : dark
-                  ? "bg-white/[0.08] text-white/70 border border-white/[0.12] hover:border-white/30"
+                  ? "bg-transparent text-text-dark-sec border border-bg-dark-border hover:border-text-dark-sec"
                   : "bg-bg-subtle text-text-secondary border border-transparent hover:border-gray-300"
               }`}
             >
@@ -88,11 +87,11 @@ export default function DistanceSelect({
               }}
               className={`w-28 h-10 text-center font-mono text-sm rounded-lg ${
                 dark
-                  ? "bg-white/[0.08] border border-white/[0.12] text-text-on-dark focus:border-brand focus:shadow-glow"
+                  ? "bg-bg-dark-input border border-bg-dark-border text-text-on-dark focus:border-brand focus:shadow-glow"
                   : "bg-bg-subtle border border-transparent text-text-primary focus:ring-2 focus:ring-brand/30"
               } focus:outline-none transition-all`}
             />
-            <span className={dark ? "text-xs text-text-muted" : "text-xs text-text-secondary"}>
+            <span className={dark ? "text-xs text-text-dark-muted" : "text-xs text-text-secondary"}>
               meters
             </span>
           </div>
@@ -101,9 +100,8 @@ export default function DistanceSelect({
     );
   }
 
-  // Full dropdown (all distances)
   const selectClasses = dark
-    ? "w-full h-12 bg-white/[0.08] border border-white/[0.12] text-text-on-dark font-body text-sm rounded-lg px-3 focus:outline-none focus:border-brand focus:shadow-glow transition-all appearance-none cursor-pointer"
+    ? "w-full h-12 bg-bg-dark-input border border-bg-dark-border text-text-on-dark font-body text-sm rounded-lg px-3 focus:outline-none focus:border-brand focus:shadow-glow transition-all appearance-none cursor-pointer"
     : "w-full h-12 bg-bg-subtle border border-transparent text-text-primary font-body text-sm rounded-lg px-3 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all appearance-none cursor-pointer";
 
   return (
@@ -144,11 +142,11 @@ export default function DistanceSelect({
             }}
             className={`w-28 h-10 text-center font-mono text-sm rounded-lg ${
               dark
-                ? "bg-white/[0.08] border border-white/[0.12] text-text-on-dark focus:border-brand focus:shadow-glow"
+                ? "bg-bg-dark-input border border-bg-dark-border text-text-on-dark focus:border-brand focus:shadow-glow"
                 : "bg-bg-subtle border border-transparent text-text-primary focus:ring-2 focus:ring-brand/30"
             } focus:outline-none transition-all`}
           />
-          <span className={dark ? "text-xs text-text-muted" : "text-xs text-text-secondary"}>
+          <span className={dark ? "text-xs text-text-dark-muted" : "text-xs text-text-secondary"}>
             meters
           </span>
         </div>

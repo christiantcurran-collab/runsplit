@@ -25,7 +25,7 @@ interface ToolShellProps {
   inputs: React.ReactNode;
   children: React.ReactNode; // results
   explanation?: React.ReactNode;
-  proCta?: string; // Dynamic CTA text, e.g. "Want a training plan for 3:32?"
+  proCta?: string;
 }
 
 export default function ToolShell({
@@ -44,23 +44,23 @@ export default function ToolShell({
       {/* Tool header */}
       <div className="bg-bg-dark text-text-on-dark py-8 sm:py-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex items-center gap-2 text-sm text-zinc-500 mb-4">
+          <nav className="flex items-center gap-2 text-sm text-text-dark-muted mb-4">
             <Link href="/tools" className="hover:text-white transition-colors">
               Tools
             </Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-            <span className="text-zinc-300">{title}</span>
+            <span className="text-text-dark-sec">{title}</span>
           </nav>
           <h1 className="font-heading font-extrabold text-3xl sm:text-4xl tracking-tight mb-2">
             {title}
           </h1>
-          <p className="text-zinc-400 text-base sm:text-lg max-w-2xl">{description}</p>
+          <p className="text-text-dark-sec text-base sm:text-lg max-w-2xl">{description}</p>
         </div>
       </div>
 
-      {/* Main content: side-by-side on desktop, stacked on mobile */}
+      {/* Main: split dark/light */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Input panel — dark */}
@@ -72,17 +72,17 @@ export default function ToolShell({
 
           {/* Results panel — light */}
           <div className="lg:col-span-8">
-            <div className="bg-bg-card rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+            <div className="bg-bg-card rounded-2xl border border-[#E4E4E8] shadow-sm p-6 sm:p-8">
               {children}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Explanation (collapsible for SEO) */}
+      {/* Explanation */}
       {explanation && (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-          <div className="bg-bg-card rounded-2xl border border-gray-100 p-6 sm:p-8">
+          <div className="bg-bg-card rounded-2xl border border-[#E4E4E8] p-6 sm:p-8">
             {explanation}
           </div>
         </div>
@@ -98,7 +98,7 @@ export default function ToolShell({
             <Link
               key={tool.href}
               href={tool.href}
-              className="group bg-bg-card rounded-xl border border-gray-100 p-4 hover:border-brand/40 hover:shadow-md transition-all"
+              className="group bg-bg-card rounded-xl border border-[#E4E4E8] p-4 hover:border-brand/40 hover:shadow-md transition-all"
             >
               <div className="font-heading font-semibold text-sm text-text-primary group-hover:text-brand transition-colors">
                 {tool.label}
@@ -109,22 +109,21 @@ export default function ToolShell({
         </div>
 
         {/* Pro CTA */}
-        <div className="mt-8 bg-gradient-to-r from-bg-dark to-zinc-900 rounded-2xl p-6 sm:p-8 text-white">
+        <div className="mt-8 bg-bg-dark rounded-2xl p-6 sm:p-8 text-white border-t-[3px] border-brand">
           <h3 className="font-heading font-bold text-xl mb-2">
             {proCta || "Want a personalised training plan?"}
           </h3>
-          <p className="text-zinc-400 text-sm mb-5 max-w-lg">
+          <p className="text-text-dark-sec text-sm mb-5 max-w-lg">
             Get an AI-powered training plan built around your fitness level, goals, and schedule. Connect Strava for even smarter recommendations.
           </p>
           <Link
             href="/signup"
-            className="inline-block bg-brand hover:bg-brand-hover text-white font-heading font-semibold text-sm px-6 py-3 rounded-xl transition-colors"
+            className="inline-block bg-brand hover:bg-brand-hover text-white font-heading font-semibold text-sm px-6 py-3 rounded-[10px] transition-colors"
           >
-            Start Free Trial — £4.99/mo
+            Get started — £4.99/mo
           </Link>
         </div>
       </div>
     </div>
   );
 }
-

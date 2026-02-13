@@ -10,34 +10,30 @@ interface UnitToggleProps {
 
 export default function UnitToggle({ value, onChange, dark = false }: UnitToggleProps) {
   return (
-    <div
-      className={`inline-flex rounded-lg p-0.5 ${
-        dark ? "bg-white/[0.08]" : "bg-bg-subtle"
-      }`}
-    >
+    <div className="flex gap-1.5">
       <button
         onClick={() => onChange("km")}
-        className={`px-3.5 py-1.5 rounded-md text-sm font-semibold transition-all ${
+        className={`px-3.5 py-[7px] rounded-md text-[13px] font-semibold transition-all ${
           value === "km"
-            ? "bg-brand text-white shadow-sm"
+            ? "bg-brand text-white"
             : dark
-            ? "text-white/60 hover:text-white"
-            : "text-text-secondary hover:text-text-primary"
+            ? "bg-transparent text-text-dark-sec border border-bg-dark-border"
+            : "bg-bg-subtle text-text-secondary"
         }`}
       >
-        km
+        per km
       </button>
       <button
         onClick={() => onChange("mile")}
-        className={`px-3.5 py-1.5 rounded-md text-sm font-semibold transition-all ${
+        className={`px-3.5 py-[7px] rounded-md text-[13px] font-semibold transition-all ${
           value === "mile"
-            ? "bg-brand text-white shadow-sm"
+            ? "bg-brand text-white"
             : dark
-            ? "text-white/60 hover:text-white"
-            : "text-text-secondary hover:text-text-primary"
+            ? "bg-transparent text-text-dark-sec border border-bg-dark-border"
+            : "bg-bg-subtle text-text-secondary"
         }`}
       >
-        mile
+        per mile
       </button>
     </div>
   );
