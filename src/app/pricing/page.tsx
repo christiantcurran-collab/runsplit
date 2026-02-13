@@ -102,11 +102,12 @@ export default function PricingPage() {
               </span>
             </div>
 
-            <button
+            <Link
+              href="/signup"
               className="block w-full text-center bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold px-6 py-3 rounded-xl transition-colors mb-2"
             >
               Start 7-Day Free Trial
-            </button>
+            </Link>
             <p className="text-xs text-gray-400 text-center mb-8">No credit card required to try</p>
 
             <ul className="space-y-3">

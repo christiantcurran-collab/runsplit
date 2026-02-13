@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/ui/Navbar";
 import Footer from "@/components/ui/Footer";
+import { AuthProvider } from "@/components/AuthProvider";
 
 export const metadata: Metadata = {
   title: "RunSplit — Running Pace Calculator & Training Tools",
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
     "training pace calculator",
     "VO2max calculator",
   ],
-  metadataBase: new URL("https://runsplit.co"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://runsplit.co"),
   openGraph: {
     title: "RunSplit — Running Pace Calculator & Training Tools",
     description:
@@ -39,9 +40,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen flex flex-col antialiased">
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <AuthProvider>
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

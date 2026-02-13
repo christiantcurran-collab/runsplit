@@ -409,6 +409,47 @@ export function calculateNegativeSplits(
 }
 
 // ============================================
+// SIMPLE SPLIT CALCULATION (for race strategy)
+// ============================================
+
+/**
+ * Calculate split times per km with a gradient (negative/positive)
+ * @param totalTimeSeconds - Target finish time
+ * @param totalDistanceKm - Race distance in km
+ * @param numSplits - Number of splits (usually one per km)
+ * @param gradientPercent - Negative = negative split (faster finish), Positive = positive split
+ * @returns Array of split times in seconds per split
+ */
+export function calculateSplits(
+  totalTimeSeconds: number,
+  totalDistanceKm: number,
+  numSplits: number,
+  gradientPercent: number
+): number[] {
+  const baseSplit = totalTimeSeconds / numSplits;
+  const splits: number[] = [];
+
+  for (let i = 0; i < numSplits; i++) {
+    // Linear gradient from start to finish
+    const progress = i / Math.max(numSplits - 1, 1); // 0 to 1
+    const adjustment = 1 + (gradientPercent / 100) * (0.5 - progress);
+    splits.push(baseSplit * adjustment);
+  }
+
+  // Handle partial last split
+  const fullKm = Math.floor(totalDistanceKm);
+  const partial = totalDistanceKm - fullKm;
+  if (partial > 0 && numSplits > fullKm) {
+    splits[splits.length - 1] *= partial;
+  }
+
+  // Normalize so they sum to totalTimeSeconds
+  const sum = splits.reduce((a, b) => a + b, 0);
+  const factor = totalTimeSeconds / sum;
+  return splits.map((s) => s * factor);
+}
+
+// ============================================
 // TREADMILL CONVERSION
 // ============================================
 
