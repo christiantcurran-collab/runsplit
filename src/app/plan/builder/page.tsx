@@ -28,9 +28,9 @@ export default function PlanBuilderPage() {
   const [fitness, setFitness] = useState<PlanBuilderFitness>({
     recentRaceDistance: "5k",
     recentRaceTimeSeconds: 1500, // 25:00
-    currentWeeklyKm: profile?.current_weekly_km || 30,
-    longestRecentRunKm: 15,
-    trainingDaysPerWeek: 4,
+    currentWeeklyKm: profile?.current_weekly_km || 15,
+    longestRecentRunKm: 5,
+    trainingDaysPerWeek: 3,
     longRunDay: "sunday",
   });
 
@@ -281,21 +281,27 @@ export default function PlanBuilderPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Training Days / Week</label>
-                  <div className="flex gap-2">
-                    {[3, 4, 5, 6].map((d) => (
-                      <button key={d} type="button"
-                        onClick={() => setFitness({ ...fitness, trainingDaysPerWeek: d })}
-                        className={`flex-1 py-2.5 rounded-lg border-2 text-sm font-semibold transition-colors ${
-                          fitness.trainingDaysPerWeek === d ? "border-brand-orange bg-brand-orange/5 text-brand-orange" : "border-gray-200 text-gray-600"
-                        }`}>
-                        {d}
-                      </button>
-                    ))}
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Running Days / Week</label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5, 6, 7].map((d) => (
+                    <button key={d} type="button"
+                      onClick={() => setFitness({ ...fitness, trainingDaysPerWeek: d })}
+                      className={`flex-1 py-2.5 rounded-lg border-2 text-sm font-semibold transition-colors ${
+                        fitness.trainingDaysPerWeek === d ? "border-brand-orange bg-brand-orange/5 text-brand-orange" : "border-gray-200 text-gray-600"
+                      }`}>
+                      {d}
+                    </button>
+                  ))}
                 </div>
+                {fitness.trainingDaysPerWeek <= 2 && (
+                  <p className="text-xs text-gray-500 mt-1.5">
+                    With {fitness.trainingDaysPerWeek === 1 ? "1 day" : "2 days"}/week, your plan will focus on quality over quantity with longer individual runs.
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Long Run Day</label>
                   <div className="flex gap-2">

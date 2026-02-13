@@ -33,7 +33,11 @@ function LoginContent() {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
-        setError(error.message);
+        if (error.message.includes("Email not confirmed")) {
+          setError("Your email hasn't been confirmed yet. Check your inbox or use the magic link option below.");
+        } else {
+          setError(error.message);
+        }
         setLoading(false);
         return;
       }
@@ -42,7 +46,7 @@ function LoginContent() {
         // Session obtained successfully — do full page redirect
         window.location.href = redirect;
       } else {
-        setError("Login succeeded but no session was returned. Please try again.");
+        setError("Login succeeded but no session was returned. Try clearing your browser cache and cookies, then try again.");
         setLoading(false);
       }
     } catch (err: unknown) {
