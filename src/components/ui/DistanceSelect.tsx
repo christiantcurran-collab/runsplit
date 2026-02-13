@@ -10,7 +10,16 @@ interface DistanceSelectProps {
   showCustom?: boolean;
   customMeters?: number;
   onCustomChange?: (meters: number) => void;
+  dark?: boolean;
+  compact?: boolean;
 }
+
+const QUICK_DISTANCES: { key: string; label: string }[] = [
+  { key: "5k", label: "5K" },
+  { key: "10k", label: "10K" },
+  { key: "half_marathon", label: "Half" },
+  { key: "marathon", label: "Marathon" },
+];
 
 export default function DistanceSelect({
   label,
@@ -19,10 +28,87 @@ export default function DistanceSelect({
   showCustom = true,
   customMeters = 10000,
   onCustomChange,
+  dark = false,
+  compact = false,
 }: DistanceSelectProps) {
+  const labelClasses = dark
+    ? "block text-xs font-medium text-text-muted uppercase tracking-wider mb-2"
+    : "block text-xs font-medium text-text-secondary uppercase tracking-wider mb-2";
+
+  if (compact) {
+    // Pill selector for quick picks
+    return (
+      <div>
+        <label className={labelClasses}>{label}</label>
+        <div className="flex flex-wrap gap-2">
+          {QUICK_DISTANCES.map((d) => (
+            <button
+              key={d.key}
+              type="button"
+              onClick={() => onChange(d.key, DISTANCES[d.key as DistanceKey].meters)}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                value === d.key
+                  ? "bg-brand text-white shadow-glow"
+                  : dark
+                  ? "bg-white/[0.08] text-white/70 border border-white/[0.12] hover:border-white/30"
+                  : "bg-bg-subtle text-text-secondary border border-transparent hover:border-gray-300"
+              }`}
+            >
+              {d.label}
+            </button>
+          ))}
+          {showCustom && (
+            <button
+              type="button"
+              onClick={() => onChange("custom", customMeters)}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                value === "custom"
+                  ? "bg-brand text-white shadow-glow"
+                  : dark
+                  ? "bg-white/[0.08] text-white/70 border border-white/[0.12] hover:border-white/30"
+                  : "bg-bg-subtle text-text-secondary border border-transparent hover:border-gray-300"
+              }`}
+            >
+              Custom
+            </button>
+          )}
+        </div>
+        {value === "custom" && showCustom && (
+          <div className="mt-3 flex items-center gap-2">
+            <input
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step={100}
+              value={customMeters}
+              onChange={(e) => {
+                const m = Number(e.target.value) || 0;
+                onCustomChange?.(m);
+                onChange("custom", m);
+              }}
+              className={`w-28 h-10 text-center font-mono text-sm rounded-lg ${
+                dark
+                  ? "bg-white/[0.08] border border-white/[0.12] text-text-on-dark focus:border-brand focus:shadow-glow"
+                  : "bg-bg-subtle border border-transparent text-text-primary focus:ring-2 focus:ring-brand/30"
+              } focus:outline-none transition-all`}
+            />
+            <span className={dark ? "text-xs text-text-muted" : "text-xs text-text-secondary"}>
+              meters
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Full dropdown (all distances)
+  const selectClasses = dark
+    ? "w-full h-12 bg-white/[0.08] border border-white/[0.12] text-text-on-dark font-body text-sm rounded-lg px-3 focus:outline-none focus:border-brand focus:shadow-glow transition-all appearance-none cursor-pointer"
+    : "w-full h-12 bg-bg-subtle border border-transparent text-text-primary font-body text-sm rounded-lg px-3 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all appearance-none cursor-pointer";
+
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+      <label className={labelClasses}>{label}</label>
       <select
         value={value}
         onChange={(e) => {
@@ -33,7 +119,7 @@ export default function DistanceSelect({
             onChange(key, DISTANCES[key as DistanceKey].meters);
           }
         }}
-        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent bg-white"
+        className={selectClasses}
       >
         {Object.entries(DISTANCES).map(([key, dist]) => (
           <option key={key} value={key}>
@@ -47,16 +133,26 @@ export default function DistanceSelect({
         <div className="mt-3 flex items-center gap-2">
           <input
             type="number"
+            inputMode="decimal"
             min={0}
             step={100}
             value={customMeters}
-            onChange={(e) => onCustomChange?.(Number(e.target.value) || 0)}
-            className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+            onChange={(e) => {
+              const m = Number(e.target.value) || 0;
+              onCustomChange?.(m);
+              onChange("custom", m);
+            }}
+            className={`w-28 h-10 text-center font-mono text-sm rounded-lg ${
+              dark
+                ? "bg-white/[0.08] border border-white/[0.12] text-text-on-dark focus:border-brand focus:shadow-glow"
+                : "bg-bg-subtle border border-transparent text-text-primary focus:ring-2 focus:ring-brand/30"
+            } focus:outline-none transition-all`}
           />
-          <span className="text-sm text-gray-500">meters</span>
+          <span className={dark ? "text-xs text-text-muted" : "text-xs text-text-secondary"}>
+            meters
+          </span>
         </div>
       )}
     </div>
   );
 }
-

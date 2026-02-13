@@ -1,231 +1,363 @@
+"use client";
+
 import Link from "next/link";
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  DISTANCES,
+  type DistanceKey,
+  timeToSeconds,
+  calculatePace,
+  calculatePaceSeconds,
+  calculateTrainingPaces,
+  formatTime,
+  formatTimeFromSeconds,
+  predictRaceTime,
+  secondsToTime,
+} from "@/lib/running-math";
+import RaceTime from "@/components/ui/RaceTime";
+import PaceBar from "@/components/ui/PaceBar";
 
-const featuredCalculators = [
-  {
-    href: "/calculators/pace",
-    title: "Pace Calculator",
-    description: "Distance + Time = Pace. Instant results for any distance.",
-    icon: "⏱️",
-  },
-  {
-    href: "/calculators/race-predictor",
-    title: "Race Time Predictor",
-    description: "Predict your marathon from a 5K. Riegel & Cameron formulas.",
-    icon: "🏁",
-  },
-  {
-    href: "/calculators/training-paces",
-    title: "Training Paces",
-    description: "Easy, tempo, interval paces from your race result.",
-    icon: "🎯",
-  },
-  {
-    href: "/calculators/splits",
-    title: "Split Calculator",
-    description: "Plan your race splits. Even or negative split strategies.",
-    icon: "📊",
-  },
-  {
-    href: "/calculators/vo2max",
-    title: "VO2max Estimator",
-    description: "Estimate your VO2max and fitness level from any race.",
-    icon: "🫁",
-  },
-  {
-    href: "/calculators/heart-rate-zones",
-    title: "HR Zone Calculator",
-    description: "5-zone heart rate training with Karvonen method.",
-    icon: "❤️",
-  },
-];
-
-const allCalculators = [
-  { href: "/calculators/speed-converter", label: "Speed / Pace Converter" },
-  { href: "/calculators/age-grade", label: "Age-Graded Calculator" },
-  { href: "/calculators/calories", label: "Calories Burned" },
-  { href: "/calculators/treadmill", label: "Treadmill Converter" },
-  { href: "/calculators/negative-split", label: "Negative Split Planner" },
-  { href: "/calculators/run-walk", label: "Run/Walk Calculator" },
+const TOOLS = [
+  { href: "/tools/pace", title: "Pace & Speed", description: "Distance + time = pace. Instant results.", icon: "01" },
+  { href: "/tools/predict", title: "What Can I Run?", description: "Predict any race time from a recent result.", icon: "02" },
+  { href: "/tools/splits", title: "Race Split Planner", description: "Plan your splits. Even or negative.", icon: "03" },
+  { href: "/tools/training-paces", title: "Find My Training Paces", description: "Easy, tempo, interval paces from a race.", icon: "04" },
+  { href: "/tools/convert", title: "Pace Converter", description: "Convert between min/km, min/mi, km/h.", icon: "05" },
+  { href: "/tools/age-grade", title: "How Good Is My Time?", description: "Age-graded performance rating.", icon: "06" },
+  { href: "/tools/vo2max", title: "Estimate My VO2max", description: "VO2max and fitness level from any race.", icon: "07" },
+  { href: "/tools/heart-rate", title: "My Heart Rate Zones", description: "5-zone training with Karvonen method.", icon: "08" },
+  { href: "/tools/calories", title: "Calories Burned", description: "Estimate calories from distance and weight.", icon: "09" },
+  { href: "/tools/treadmill", title: "Treadmill vs Outdoor", description: "Convert treadmill incline to road effort.", icon: "10" },
+  { href: "/tools/negative-split", title: "Negative Split Strategy", description: "Start slower, finish stronger.", icon: "11" },
+  { href: "/tools/run-walk", title: "Run/Walk Planner", description: "Run/walk intervals for any distance.", icon: "12" },
 ];
 
 export default function HomePage() {
+  const [selectedDist, setSelectedDist] = useState<string>("marathon");
+  const [targetH, setTargetH] = useState(3);
+  const [targetM, setTargetM] = useState(30);
+  const [targetS, setTargetS] = useState(0);
+  const [showResults, setShowResults] = useState(false);
+
+  const distMeters = DISTANCES[selectedDist as DistanceKey]?.meters || 42195;
+  const totalSec = timeToSeconds({ hours: targetH, minutes: targetM, seconds: targetS });
+
+  const analysis = useMemo(() => {
+    if (totalSec <= 0) return null;
+    const paceKm = calculatePace(distMeters, totalSec, "km");
+    const paceSecKm = calculatePaceSeconds(distMeters, totalSec, "km");
+    const trainingPaces = calculateTrainingPaces(distMeters, totalSec);
+    const distName = DISTANCES[selectedDist as DistanceKey]?.name || "Race";
+
+    // Equivalent times
+    const equivalents = Object.entries(DISTANCES)
+      .filter(([key]) => key !== selectedDist)
+      .slice(0, 4)
+      .map(([, d]) => ({
+        name: d.shortName,
+        time: formatTimeFromSeconds(predictRaceTime(distMeters, totalSec, d.meters)),
+        pace: formatTime(secondsToTime(calculatePaceSeconds(d.meters, predictRaceTime(distMeters, totalSec, d.meters), "km"))),
+      }));
+
+    return {
+      paceDisplay: formatTime(paceKm),
+      paceSecKm,
+      distName,
+      trainingPaces: {
+        easy: `${formatTime(secondsToTime(trainingPaces.easy.min))}-${formatTime(secondsToTime(trainingPaces.easy.max))}`,
+        tempo: `${formatTime(secondsToTime(trainingPaces.threshold.min))}-${formatTime(secondsToTime(trainingPaces.threshold.max))}`,
+        interval: `${formatTime(secondsToTime(trainingPaces.interval.min))}-${formatTime(secondsToTime(trainingPaces.interval.max))}`,
+      },
+      equivalents,
+    };
+  }, [totalSec, distMeters, selectedDist]);
+
   return (
     <div className="min-h-screen">
-      {/* Hero */}
-      <section className="bg-brand-black text-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
-          <div className="text-center max-w-3xl mx-auto">
-            <h1 className="font-heading font-black text-4xl sm:text-5xl lg:text-6xl leading-tight mb-6">
-              The running calculators
+      {/* Hero — full viewport, dark */}
+      <section className="bg-bg-dark text-text-on-dark min-h-[90vh] flex items-center relative overflow-hidden">
+        {/* Subtle gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-bg-dark via-bg-dark to-brand/5" />
+
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-6xl leading-[1.1] mb-6 tracking-tight">
+              Know Your Numbers.
               <br />
-              you&apos;ve been{" "}
-              <span className="text-brand-orange">looking for</span>
+              <span className="text-brand">Run Your Best.</span>
             </h1>
-            <p className="text-gray-400 text-lg sm:text-xl mb-8 max-w-xl mx-auto">
-              Free pace calculators, race predictions, training zones and more.
-              Beautiful, fast, built for runners. No signup required.
+            <p className="text-zinc-400 text-lg sm:text-xl max-w-xl mx-auto leading-relaxed">
+              AI-powered pacing, race predictions, and custom training plans for runners who take it seriously.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/calculators"
-                className="bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold px-8 py-3.5 rounded-xl text-lg transition-colors"
-              >
-                Open Calculators
-              </Link>
-              <Link
-                href="/pricing"
-                className="border border-gray-600 hover:border-gray-400 text-gray-300 hover:text-white font-semibold px-8 py-3.5 rounded-xl text-lg transition-colors"
-              >
-                Get Pro
-              </Link>
-            </div>
           </div>
 
-          {/* Stats */}
-          <div className="mt-16 grid grid-cols-3 gap-8 max-w-lg mx-auto">
-            <div className="text-center">
-              <div className="font-heading font-bold text-2xl sm:text-3xl text-brand-orange">12</div>
-              <div className="text-gray-500 text-sm mt-1">Free Calculators</div>
+          {/* Smart Input */}
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-white/[0.04] backdrop-blur border border-white/[0.08] rounded-2xl p-6 sm:p-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 sm:gap-6">
+                <div className="flex-1 w-full">
+                  <label className="block text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
+                    I want to run a
+                  </label>
+                  <select
+                    value={selectedDist}
+                    onChange={(e) => setSelectedDist(e.target.value)}
+                    className="w-full h-12 bg-white/[0.08] border border-white/[0.12] text-white font-heading font-semibold text-lg rounded-lg px-4 focus:outline-none focus:border-brand focus:shadow-glow transition-all appearance-none cursor-pointer"
+                  >
+                    {Object.entries(DISTANCES).map(([key, d]) => (
+                      <option key={key} value={key} className="bg-bg-dark text-white">
+                        {d.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
+                    in
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={0} max={99}
+                      value={targetH}
+                      onChange={(e) => setTargetH(Number(e.target.value) || 0)}
+                      className="w-14 h-12 text-center font-mono text-xl bg-white/[0.08] border border-white/[0.12] text-white rounded-lg focus:outline-none focus:border-brand focus:shadow-glow transition-all"
+                    />
+                    <span className="font-mono text-2xl font-bold text-white/30">:</span>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={0} max={59}
+                      value={targetM}
+                      onChange={(e) => setTargetM(Math.min(59, Number(e.target.value) || 0))}
+                      className="w-14 h-12 text-center font-mono text-xl bg-white/[0.08] border border-white/[0.12] text-white rounded-lg focus:outline-none focus:border-brand focus:shadow-glow transition-all"
+                    />
+                    <span className="font-mono text-2xl font-bold text-white/30">:</span>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={0} max={59}
+                      value={targetS}
+                      onChange={(e) => setTargetS(Math.min(59, Number(e.target.value) || 0))}
+                      className="w-14 h-12 text-center font-mono text-xl bg-white/[0.08] border border-white/[0.12] text-white rounded-lg focus:outline-none focus:border-brand focus:shadow-glow transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowResults(true)}
+                disabled={totalSec <= 0}
+                className="w-full mt-6 bg-brand hover:bg-brand-hover text-white font-heading font-semibold py-3.5 rounded-xl text-base transition-all disabled:opacity-40 hover:shadow-glow"
+              >
+                Show me what I need →
+              </button>
             </div>
-            <div className="text-center">
-              <div className="font-heading font-bold text-2xl sm:text-3xl text-brand-orange">0</div>
-              <div className="text-gray-500 text-sm mt-1">Signup Required</div>
-            </div>
-            <div className="text-center">
-              <div className="font-heading font-bold text-2xl sm:text-3xl text-brand-orange">∞</div>
-              <div className="text-gray-500 text-sm mt-1">Free Forever</div>
-            </div>
+
+            <p className="text-center text-sm text-zinc-600 mt-4">
+              or{" "}
+              <Link href="/signup" className="text-brand hover:text-brand-hover font-medium transition-colors">
+                connect Strava to start from your actual data →
+              </Link>
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Featured calculators */}
-      <section className="bg-gray-50 py-16 sm:py-20">
+      {/* Analysis Results (appears after clicking button) */}
+      <AnimatePresence>
+        {showResults && analysis && (
+          <motion.section
+            className="bg-bg-page py-16 sm:py-20"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-10">
+                <h2 className="font-heading font-bold text-2xl sm:text-3xl text-text-primary mb-2">
+                  Your {analysis.distName} Breakdown
+                </h2>
+                <p className="text-text-secondary">
+                  Here&apos;s what it takes to run {formatTimeFromSeconds(totalSec)}
+                </p>
+              </div>
+
+              {/* Race pace hero */}
+              <div className="bg-bg-card rounded-2xl border border-gray-100 shadow-sm p-8 mb-6">
+                <div className="text-center mb-6">
+                  <span className="text-xs font-medium text-text-muted uppercase tracking-wider">Required Race Pace</span>
+                  <div className="mt-2">
+                    <RaceTime value={`${analysis.paceDisplay}/km`} size="xl" />
+                  </div>
+                </div>
+                <PaceBar pacePerKm={analysis.paceSecKm} />
+              </div>
+
+              {/* Training paces + equivalents */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                <div className="bg-bg-card rounded-2xl border border-gray-100 shadow-sm p-6">
+                  <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-4">
+                    Your Training Paces
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-text-secondary">Easy</span>
+                      <span className="font-mono font-semibold text-lg text-text-primary">{analysis.trainingPaces.easy}/km</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-text-secondary">Tempo</span>
+                      <span className="font-mono font-semibold text-lg text-text-primary">{analysis.trainingPaces.tempo}/km</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-text-secondary">Interval</span>
+                      <span className="font-mono font-semibold text-lg text-text-primary">{analysis.trainingPaces.interval}/km</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-bg-card rounded-2xl border border-gray-100 shadow-sm p-6">
+                  <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-4">
+                    Equivalent Race Times
+                  </h3>
+                  <div className="space-y-4">
+                    {analysis.equivalents.map((eq) => (
+                      <div key={eq.name} className="flex items-center justify-between">
+                        <span className="text-sm text-text-secondary">{eq.name}</span>
+                        <div className="text-right">
+                          <span className="font-mono font-semibold text-lg text-text-primary">{eq.time}</span>
+                          <span className="text-xs text-text-muted ml-2">{eq.pace}/km</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA */}
+              <div className="bg-gradient-to-r from-brand to-brand-hover rounded-2xl p-8 text-center text-white">
+                <h3 className="font-heading font-bold text-xl sm:text-2xl mb-3">
+                  Get a personalised training plan for {formatTimeFromSeconds(totalSec)}
+                </h3>
+                <p className="text-white/80 mb-6 max-w-md mx-auto">
+                  Our AI coach will build a plan around your fitness, schedule, and this goal.
+                </p>
+                <Link
+                  href="/signup"
+                  className="inline-block bg-white text-brand font-heading font-bold px-8 py-3.5 rounded-xl hover:bg-gray-100 transition-colors"
+                >
+                  Start Free Trial →
+                </Link>
+              </div>
+            </div>
+          </motion.section>
+        )}
+      </AnimatePresence>
+
+      {/* Section 2: Powered by your data */}
+      <section className="bg-bg-page py-16 sm:py-20 border-t border-gray-100">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="font-heading font-bold text-2xl sm:text-3xl text-text-primary mb-3">
+              Powered by your data
+            </h2>
+            <p className="text-text-secondary text-lg">
+              Connect your watch. Get intelligent insights.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {[
+              { step: "01", title: "Connect", desc: "Link Strava, Garmin, or enter a recent race result manually." },
+              { step: "02", title: "AI Analyses", desc: "Your history, fitness trends, strengths, and limiters — analysed instantly." },
+              { step: "03", title: "You Get", desc: "A training plan that actually fits your life and your goals." },
+            ].map((item) => (
+              <div key={item.step} className="bg-bg-card rounded-2xl border border-gray-100 p-6 shadow-sm">
+                <span className="font-mono text-xs font-bold text-brand tracking-wider">{item.step}</span>
+                <h3 className="font-heading font-bold text-lg text-text-primary mt-3 mb-2">{item.title}</h3>
+                <p className="text-sm text-text-secondary leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Section 3: Free tools grid */}
+      <section className="bg-bg-dark text-text-on-dark py-16 sm:py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="font-heading font-bold text-2xl sm:text-3xl text-gray-900 mb-3">
-              Popular Calculators
+            <h2 className="font-heading font-bold text-2xl sm:text-3xl mb-3">
+              Free tools, no signup
             </h2>
-            <p className="text-gray-500 text-lg">
-              Real-time results. No buttons to click.
+            <p className="text-zinc-400 text-lg">
+              12 running tools. Instant results. Unlimited use.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {featuredCalculators.map((calc) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {TOOLS.map((tool) => (
               <Link
-                key={calc.href}
-                href={calc.href}
-                className="bg-white rounded-2xl border border-gray-200 p-6 hover:border-brand-orange hover:shadow-lg transition-all group"
+                key={tool.href}
+                href={tool.href}
+                className="group bg-white/[0.04] border border-white/[0.08] rounded-xl p-5 hover:border-brand/50 hover:bg-white/[0.06] transition-all"
               >
-                <div className="text-3xl mb-3">{calc.icon}</div>
-                <h3 className="font-heading font-semibold text-lg text-gray-900 group-hover:text-brand-orange transition-colors mb-2">
-                  {calc.title}
+                <span className="font-mono text-xs font-bold text-brand/60 tracking-wider">{tool.icon}</span>
+                <h3 className="font-heading font-semibold text-white mt-2 mb-1 group-hover:text-brand transition-colors">
+                  {tool.title}
                 </h3>
-                <p className="text-sm text-gray-500 leading-relaxed mb-4">
-                  {calc.description}
-                </p>
-                <span className="text-brand-orange text-sm font-medium group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                  Open calculator
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
+                <p className="text-sm text-zinc-500 leading-relaxed">{tool.description}</p>
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-brand mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  Open tool
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </span>
               </Link>
             ))}
           </div>
-
-          {/* More calculators */}
-          <div className="mt-8 text-center">
-            <p className="text-sm text-gray-500 mb-4">Plus 6 more calculators:</p>
-            <div className="flex flex-wrap justify-center gap-3">
-              {allCalculators.map((calc) => (
-                <Link
-                  key={calc.href}
-                  href={calc.href}
-                  className="text-sm font-medium text-gray-600 hover:text-brand-orange bg-white border border-gray-200 rounded-full px-4 py-2 transition-colors"
-                >
-                  {calc.label}
-                </Link>
-              ))}
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* Pro CTA */}
-      <section className="py-16 sm:py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-br from-brand-black to-gray-900 rounded-3xl p-8 sm:p-12 text-white text-center">
-            <h2 className="font-heading font-bold text-2xl sm:text-3xl mb-4">
-              Ready for a personalised training plan?
-            </h2>
-            <p className="text-gray-400 max-w-lg mx-auto mb-8">
-              Get an AI-powered training plan built around your fitness, goals, and schedule.
-              Race-day pacing strategy, training log, and calendar export included.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link
-                href="/pricing"
-                className="bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold px-8 py-3.5 rounded-xl text-lg transition-colors"
-              >
-                Get RunSplit Pro — £4.99/mo
-              </Link>
-              <span className="text-gray-500 text-sm">7-day free trial. Cancel anytime.</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section className="bg-gray-50 py-16 sm:py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-heading font-bold text-2xl sm:text-3xl text-center text-gray-900 mb-12">
-            Why runners choose RunSplit
+      {/* Section 4: Pro CTA */}
+      <section className="py-16 sm:py-20 bg-gradient-to-br from-brand/5 via-bg-page to-bg-page">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="font-heading font-extrabold text-3xl sm:text-4xl text-text-primary mb-4">
+            Your AI coach is ready.
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-brand-orange/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6 text-brand-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <h3 className="font-heading font-semibold text-lg mb-2">Instant Results</h3>
-              <p className="text-sm text-gray-500">
-                No &ldquo;calculate&rdquo; buttons. Every input change updates results in real time.
-              </p>
+          <p className="text-text-secondary text-lg max-w-xl mx-auto mb-8 leading-relaxed">
+            Connect your Strava. Tell us your goal. Get a plan built around your fitness, your schedule, and your life — not a generic PDF.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
+            <Link
+              href="/signup"
+              className="bg-brand hover:bg-brand-hover text-white font-heading font-bold px-8 py-4 rounded-xl text-lg transition-colors shadow-glow"
+            >
+              Start Free Trial
+            </Link>
+          </div>
+          <p className="text-sm text-text-muted">
+            £4.99/month · Cancel anytime · 7-day free trial
+          </p>
+        </div>
+      </section>
+
+      {/* Section 5: Stats */}
+      <section className="bg-bg-dark text-text-on-dark py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-3 gap-8 text-center">
+            <div>
+              <div className="font-mono font-bold text-3xl sm:text-4xl text-brand">12</div>
+              <div className="text-xs text-zinc-500 mt-1 uppercase tracking-wider">Free Tools</div>
             </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-brand-orange/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6 text-brand-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="font-heading font-semibold text-lg mb-2">Accurate Formulas</h3>
-              <p className="text-sm text-gray-500">
-                Industry-standard Riegel, Daniels, and Karvonen formulas. Cross-checked against the best.
-              </p>
+            <div>
+              <div className="font-mono font-bold text-3xl sm:text-4xl text-brand">0</div>
+              <div className="text-xs text-zinc-500 mt-1 uppercase tracking-wider">Signup Required</div>
             </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-brand-orange/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6 text-brand-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h3 className="font-heading font-semibold text-lg mb-2">Mobile-First</h3>
-              <p className="text-sm text-gray-500">
-                Designed for your phone at the track. Large touch targets, clean layout.
-              </p>
+            <div>
+              <div className="font-mono font-bold text-3xl sm:text-4xl text-brand">AI</div>
+              <div className="text-xs text-zinc-500 mt-1 uppercase tracking-wider">Powered Coach</div>
             </div>
           </div>
         </div>

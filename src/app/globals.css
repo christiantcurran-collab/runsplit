@@ -2,27 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
 
 :root {
-  --background: #ffffff;
-  --foreground: #0A0A0A;
+  --bg-dark: #09090B;
+  --bg-page: #FAFAFA;
+  --bg-card: #FFFFFF;
+  --bg-subtle: #F4F4F5;
+  --brand: #F97316;
+  --brand-hover: #EA580C;
+  --brand-glow: rgba(249, 115, 22, 0.15);
+  --success: #22C55E;
+  --warning: #EAB308;
+  --danger: #EF4444;
+  --text-primary: #09090B;
+  --text-secondary: #71717A;
+  --text-on-dark: #FAFAFA;
+  --text-muted: #A1A1AA;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-heading: 'Plus Jakarta Sans', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: 'Outfit', sans-serif;
+  color: var(--text-primary);
+  background: var(--bg-page);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Monospace number animation */
-.time-display {
-  font-family: 'IBM Plex Mono', monospace;
+/* Monospace numbers — THE signature element */
+.time-display, .race-time {
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  transition: all 0.15s ease-out;
 }
 
-/* Smooth input transitions */
+/* Remove number input spinners */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -39,16 +55,46 @@ input[type="number"] {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c4c4c4;
+  background: #D4D4D8;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a0a0a0;
+  background: #A1A1AA;
+}
+
+/* Dark panel inputs */
+.dark-panel input,
+.dark-panel select {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #FAFAFA;
+  transition: all 0.15s ease;
+}
+
+.dark-panel input:focus,
+.dark-panel select:focus {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+  outline: none;
+}
+
+.dark-panel input::placeholder {
+  color: var(--text-muted);
+}
+
+.dark-panel label {
+  color: var(--text-muted);
+}
+
+/* Pace bar gradient */
+.pace-gradient {
+  background: linear-gradient(90deg, #F97316 0%, #EAB308 35%, #71717A 70%, #D4D4D8 100%);
 }
 
 @layer utilities {

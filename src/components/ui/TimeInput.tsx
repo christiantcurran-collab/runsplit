@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 
 interface TimeInputProps {
   label: string;
@@ -9,6 +9,7 @@ interface TimeInputProps {
   seconds: number;
   onChange: (h: number, m: number, s: number) => void;
   showHours?: boolean;
+  dark?: boolean;
 }
 
 export default function TimeInput({
@@ -18,46 +19,83 @@ export default function TimeInput({
   seconds,
   onChange,
   showHours = true,
+  dark = false,
 }: TimeInputProps) {
+  const minRef = useRef<HTMLInputElement>(null);
+  const secRef = useRef<HTMLInputElement>(null);
+
+  const inputClasses = dark
+    ? "bg-white/[0.08] border border-white/[0.12] text-text-on-dark font-mono text-xl text-center rounded-lg focus:outline-none focus:border-brand focus:shadow-glow transition-all"
+    : "bg-bg-subtle border border-transparent text-text-primary font-mono text-xl text-center rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all";
+
+  const labelClasses = dark
+    ? "block text-xs font-medium text-text-muted uppercase tracking-wider mb-2"
+    : "block text-xs font-medium text-text-secondary uppercase tracking-wider mb-2";
+
+  const colonClasses = dark
+    ? "font-mono text-2xl font-bold text-white/30"
+    : "font-mono text-2xl font-bold text-text-muted";
+
+  const handleHourChange = (val: string) => {
+    const n = Math.min(99, Math.max(0, parseInt(val) || 0));
+    onChange(n, minutes, seconds);
+    if (val.length >= 2 && minRef.current) minRef.current.focus();
+  };
+
+  const handleMinChange = (val: string) => {
+    const n = Math.min(59, Math.max(0, parseInt(val) || 0));
+    onChange(hours, n, seconds);
+    if (val.length >= 2 && secRef.current) secRef.current.focus();
+  };
+
+  const handleSecChange = (val: string) => {
+    const n = Math.min(59, Math.max(0, parseInt(val) || 0));
+    onChange(hours, minutes, n);
+  };
+
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
-      <div className="flex items-center gap-1">
+      <label className={labelClasses}>{label}</label>
+      <div className="flex items-center gap-1.5">
         {showHours && (
           <>
             <input
               type="number"
+              inputMode="numeric"
               min={0}
               max={99}
               value={hours}
-              onChange={(e) => onChange(Number(e.target.value) || 0, minutes, seconds)}
-              className="w-16 sm:w-20 text-center font-mono text-lg border border-gray-300 rounded-lg px-2 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+              onChange={(e) => handleHourChange(e.target.value)}
+              className={`w-16 h-12 ${inputClasses}`}
               placeholder="HH"
             />
-            <span className="text-gray-400 font-mono text-xl font-bold">:</span>
+            <span className={colonClasses}>:</span>
           </>
         )}
         <input
+          ref={minRef}
           type="number"
+          inputMode="numeric"
           min={0}
           max={59}
           value={minutes}
-          onChange={(e) => onChange(hours, Number(e.target.value) || 0, seconds)}
-          className="w-16 sm:w-20 text-center font-mono text-lg border border-gray-300 rounded-lg px-2 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+          onChange={(e) => handleMinChange(e.target.value)}
+          className={`w-16 h-12 ${inputClasses}`}
           placeholder="MM"
         />
-        <span className="text-gray-400 font-mono text-xl font-bold">:</span>
+        <span className={colonClasses}>:</span>
         <input
+          ref={secRef}
           type="number"
+          inputMode="numeric"
           min={0}
           max={59}
           value={seconds}
-          onChange={(e) => onChange(hours, minutes, Number(e.target.value) || 0)}
-          className="w-16 sm:w-20 text-center font-mono text-lg border border-gray-300 rounded-lg px-2 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+          onChange={(e) => handleSecChange(e.target.value)}
+          className={`w-16 h-12 ${inputClasses}`}
           placeholder="SS"
         />
       </div>
     </div>
   );
 }
-

@@ -5,30 +5,32 @@ import Footer from "@/components/ui/Footer";
 import { AuthProvider } from "@/components/AuthProvider";
 
 export const metadata: Metadata = {
-  title: "RunSplit — Running Pace Calculator & Training Tools",
+  title: "RunSplit — AI Running Coach & Training Tools",
   description:
-    "Free running calculators for pace, race predictions, splits, VO2max, training zones and more. Modern tools built for runners.",
+    "AI-powered pacing, race predictions, and custom training plans for runners. Free tools, Strava integration, and personalised coaching.",
   keywords: [
     "running pace calculator",
+    "AI running coach",
     "race time predictor",
+    "training plan generator",
     "running split calculator",
-    "training pace calculator",
     "VO2max calculator",
+    "Strava training plan",
   ],
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://runsplit.co"),
   openGraph: {
-    title: "RunSplit — Running Pace Calculator & Training Tools",
+    title: "RunSplit — AI Running Coach & Training Tools",
     description:
-      "Free running calculators for pace, race predictions, splits, VO2max, training zones and more.",
+      "AI-powered pacing, race predictions, and custom training plans for runners who take it seriously.",
     url: "https://runsplit.co",
     siteName: "RunSplit",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "RunSplit — Running Pace Calculator & Training Tools",
+    title: "RunSplit — AI Running Coach & Training Tools",
     description:
-      "Free running calculators for pace, race predictions, splits, VO2max, training zones and more.",
+      "AI-powered pacing, race predictions, and custom training plans for runners who take it seriously.",
   },
 };
 
@@ -39,7 +41,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen flex flex-col antialiased">
+      <body className="min-h-screen flex flex-col antialiased font-body">
         <AuthProvider>
           <Navbar />
           <main className="flex-1">{children}</main>
