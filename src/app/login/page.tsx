@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-8 h-8 border-3 border-brand-orange border-t-transparent rounded-full animate-spin" /></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-8 h-8 border-4 border-brand-orange border-t-transparent rounded-full animate-spin" /></div>}>
       <LoginContent />
     </Suspense>
   );
@@ -30,14 +30,20 @@ function LoginContent() {
     setError("");
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
         setError(error.message);
         setLoading(false);
-      } else {
-        // Use full page redirect to ensure cookies are sent with the next request
+        return;
+      }
+
+      if (data?.session) {
+        // Session obtained successfully — do full page redirect
         window.location.href = redirect;
+      } else {
+        setError("Login succeeded but no session was returned. Please try again.");
+        setLoading(false);
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Sign in failed. Please try again.");
@@ -46,6 +52,7 @@ function LoginContent() {
   };
 
   const handleMagicLink = async () => {
+    if (!email) return;
     setLoading(true);
     setError("");
 
@@ -170,4 +177,3 @@ function LoginContent() {
     </div>
   );
 }
-
