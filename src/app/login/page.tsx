@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   return (
@@ -19,7 +19,6 @@ function LoginContent() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/plan";
 
@@ -37,7 +36,8 @@ function LoginContent() {
         setError(error.message);
         setLoading(false);
       } else {
-        router.push(redirect);
+        // Use full page redirect to ensure cookies are sent with the next request
+        window.location.href = redirect;
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Sign in failed. Please try again.");
