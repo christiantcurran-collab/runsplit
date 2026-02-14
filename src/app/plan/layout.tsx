@@ -4,3 +4,4 @@ export default function PlanLayout({ children }: { children: React.ReactNode }) 
   return <RequireAuth>{children}</RequireAuth>;
 }
 
+

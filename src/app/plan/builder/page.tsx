@@ -1,12 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { DISTANCES, type DistanceKey } from "@/lib/running-math";
 import type { PlanBuilderGoal, PlanBuilderFitness, PlanBuilderPreferences } from "@/types";
 
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+const PROGRESS_TIPS = [
+  "Your plan will include personalised paces based on your recent race time.",
+  "Each workout is designed with a specific purpose — no junk miles.",
+  "Recovery weeks are built in every 3-4 weeks to prevent injury.",
+  "The plan follows the 80/20 rule — 80% easy running, 20% quality work.",
+  "Your long run will build progressively week over week.",
+  "Taper weeks at the end ensure you're fresh on race day.",
+];
 
 export default function PlanBuilderPage() {
   const router = useRouter();
@@ -15,11 +24,20 @@ export default function PlanBuilderPage() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
 
+  // Streaming progress state
+  const [progressPhase, setProgressPhase] = useState("");
+  const [progressMessage, setProgressMessage] = useState("");
+  const [progressPercent, setProgressPercent] = useState(0);
+  const [weeksBuilt, setWeeksBuilt] = useState(0);
+  const [totalWeeks, setTotalWeeks] = useState(0);
+  const [tipIndex, setTipIndex] = useState(0);
+  const tipIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   // Step 1: Goal
   const [goal, setGoal] = useState<PlanBuilderGoal>({
     raceDistance: "marathon",
     goalType: "target_time",
-    targetTimeSeconds: 14400, // 4 hours
+    targetTimeSeconds: 14400,
     raceDate: "",
     raceName: "",
   });
@@ -27,7 +45,7 @@ export default function PlanBuilderPage() {
   // Step 2: Fitness
   const [fitness, setFitness] = useState<PlanBuilderFitness>({
     recentRaceDistance: "5k",
-    recentRaceTimeSeconds: 1500, // 25:00
+    recentRaceTimeSeconds: 1500,
     currentWeeklyKm: profile?.current_weekly_km || 15,
     longestRecentRunKm: 5,
     trainingDaysPerWeek: 3,
@@ -52,10 +70,29 @@ export default function PlanBuilderPage() {
   const [recentMinutes, setRecentMinutes] = useState(25);
   const [recentSeconds, setRecentSeconds] = useState(0);
 
+  // Rotate tips during generation
+  useEffect(() => {
+    if (generating) {
+      tipIntervalRef.current = setInterval(() => {
+        setTipIndex((prev) => (prev + 1) % PROGRESS_TIPS.length);
+      }, 5000);
+    } else {
+      if (tipIntervalRef.current) clearInterval(tipIntervalRef.current);
+    }
+    return () => {
+      if (tipIntervalRef.current) clearInterval(tipIntervalRef.current);
+    };
+  }, [generating]);
+
   const handleGenerate = async () => {
     if (!user) return;
     setGenerating(true);
     setError("");
+    setProgressPhase("connecting");
+    setProgressMessage("Starting your plan generation...");
+    setProgressPercent(5);
+    setWeeksBuilt(0);
+    setTipIndex(0);
 
     const targetTimeSec = targetHours * 3600 + targetMinutes * 60 + targetSeconds;
     const recentTimeSec = recentHours * 3600 + recentMinutes * 60 + recentSeconds;
@@ -82,12 +119,78 @@ export default function PlanBuilderPage() {
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to generate plan");
+        // If it's not SSE, treat as error
+        const contentType = res.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+          const data = await res.json();
+          throw new Error(data.error || "Failed to generate plan");
+        }
+        throw new Error("Failed to generate plan");
       }
 
-      const { planId } = await res.json();
-      router.push(`/plan?new=${planId}`);
+      // Handle SSE stream
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error("No response stream available");
+      }
+
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // Parse SSE events from buffer
+        const lines = buffer.split("\n");
+        buffer = "";
+
+        let currentEventType = "";
+        let currentData = "";
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+
+          if (line.startsWith("event: ")) {
+            currentEventType = line.slice(7).trim();
+          } else if (line.startsWith("data: ")) {
+            currentData = line.slice(6);
+          } else if (line === "" && currentEventType && currentData) {
+            // Process event
+            try {
+              const data = JSON.parse(currentData);
+
+              if (currentEventType === "progress") {
+                setProgressPhase(data.phase);
+                setProgressMessage(data.message);
+                setProgressPercent(data.percent);
+                if (data.weeksBuilt !== undefined) setWeeksBuilt(data.weeksBuilt);
+                if (data.totalWeeks !== undefined) setTotalWeeks(data.totalWeeks);
+              } else if (currentEventType === "complete") {
+                router.push(`/plan?new=${data.planId}`);
+                return;
+              } else if (currentEventType === "error") {
+                throw new Error(data.message);
+              }
+            } catch (parseErr) {
+              // If it's an error event thrown from above, re-throw
+              if (parseErr instanceof Error && parseErr.message !== "Unexpected end of JSON input") {
+                throw parseErr;
+              }
+            }
+
+            currentEventType = "";
+            currentData = "";
+          } else if (line !== "" && !line.startsWith("event:") && !line.startsWith("data:")) {
+            // Incomplete line, add back to buffer
+            buffer = lines.slice(i).join("\n");
+            break;
+          }
+        }
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to generate plan. Please try again.");
       setGenerating(false);
@@ -102,12 +205,103 @@ export default function PlanBuilderPage() {
   if (generating) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-brand-orange border-t-transparent rounded-full animate-spin mx-auto mb-6" />
-          <h2 className="font-heading font-bold text-2xl mb-2">Building your training plan...</h2>
-          <p className="text-gray-500 max-w-md">
-            Our AI coach is creating a personalised {distanceName} plan based on your fitness, goals, and preferences. This takes 15-30 seconds.
+        <div className="max-w-lg w-full text-center">
+          {/* Animated progress ring */}
+          <div className="relative w-28 h-28 mx-auto mb-8">
+            <svg className="w-28 h-28 -rotate-90" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="52" fill="none" stroke="#E5E7EB" strokeWidth="8" />
+              <circle
+                cx="60" cy="60" r="52" fill="none"
+                stroke="#3B82F6" strokeWidth="8" strokeLinecap="round"
+                strokeDasharray={`${2 * Math.PI * 52}`}
+                strokeDashoffset={`${2 * Math.PI * 52 * (1 - progressPercent / 100)}`}
+                className="transition-all duration-700 ease-out"
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="font-heading font-bold text-2xl text-brand-orange">
+                {progressPercent}%
+              </span>
+            </div>
+          </div>
+
+          {/* Phase title */}
+          <h2 className="font-heading font-bold text-2xl mb-2 text-text-primary">
+            {progressPhase === "complete"
+              ? "Plan Ready!"
+              : `Building your ${distanceName} plan`}
+          </h2>
+
+          {/* Progress message */}
+          <p className="text-text-secondary mb-4 transition-all duration-300">
+            {progressMessage}
           </p>
+
+          {/* Weeks counter */}
+          {weeksBuilt > 0 && totalWeeks > 0 && (
+            <div className="mb-6">
+              <div className="flex justify-between text-xs text-text-muted mb-1.5">
+                <span>Week {weeksBuilt}</span>
+                <span>{totalWeeks} weeks total</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-brand to-brand-hover rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${(weeksBuilt / totalWeeks) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Progress steps */}
+          <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 text-left">
+            <div className="space-y-3">
+              {[
+                { key: "analyzing", label: "Analysing fitness profile" },
+                { key: "designing", label: "Designing plan structure" },
+                { key: "building", label: "Building weekly workouts" },
+                { key: "finalizing", label: "Finalising plan" },
+                { key: "saving", label: "Saving to your account" },
+              ].map((step) => {
+                const phases = ["analyzing", "designing", "building", "finalizing", "saving", "complete"];
+                const currentIdx = phases.indexOf(progressPhase);
+                const stepIdx = phases.indexOf(step.key);
+                const isComplete = currentIdx > stepIdx;
+                const isCurrent = currentIdx === stepIdx;
+
+                return (
+                  <div key={step.key} className="flex items-center gap-3">
+                    {isComplete ? (
+                      <div className="w-6 h-6 rounded-full bg-success flex items-center justify-center flex-shrink-0">
+                        <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    ) : isCurrent ? (
+                      <div className="w-6 h-6 rounded-full border-2 border-brand flex items-center justify-center flex-shrink-0">
+                        <div className="w-2 h-2 bg-brand rounded-full animate-pulse" />
+                      </div>
+                    ) : (
+                      <div className="w-6 h-6 rounded-full border-2 border-gray-200 flex-shrink-0" />
+                    )}
+                    <span className={`text-sm ${isComplete ? "text-text-primary font-medium" : isCurrent ? "text-brand font-medium" : "text-text-muted"}`}>
+                      {step.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Rotating tips */}
+          <div className="bg-blue-50 rounded-lg p-4 text-sm text-blue-700 transition-all duration-500">
+            <div className="flex items-start gap-2">
+              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span key={tipIndex} className="animate-fade-up">{PROGRESS_TIPS[tipIndex]}</span>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -137,7 +331,7 @@ export default function PlanBuilderPage() {
                     : "bg-gray-200 text-gray-500"
                 }`}
               >
-                {s < step ? "✓" : s}
+                {s < step ? "\u2713" : s}
               </div>
               {s < 3 && <div className={`w-12 h-0.5 ${s < step ? "bg-brand-green" : "bg-gray-200"}`} />}
             </div>
@@ -232,7 +426,7 @@ export default function PlanBuilderPage() {
             <button onClick={() => setStep(2)}
               disabled={!goal.raceDate}
               className="w-full mt-8 bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50">
-              Next: Your Fitness →
+              Next: Your Fitness &rarr;
             </button>
           </div>
         )}
@@ -321,10 +515,10 @@ export default function PlanBuilderPage() {
 
             <div className="flex gap-3 mt-8">
               <button onClick={() => setStep(1)} className="flex-1 border border-gray-300 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-colors">
-                ← Back
+                &larr; Back
               </button>
               <button onClick={() => setStep(3)} className="flex-1 bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold py-3 rounded-xl transition-colors">
-                Next: Preferences →
+                Next: Preferences &rarr;
               </button>
             </div>
           </div>
@@ -388,10 +582,10 @@ export default function PlanBuilderPage() {
 
             <div className="flex gap-3 mt-8">
               <button onClick={() => setStep(2)} className="flex-1 border border-gray-300 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-colors">
-                ← Back
+                &larr; Back
               </button>
               <button onClick={handleGenerate} className="flex-1 bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold py-3 rounded-xl transition-colors">
-                Generate My Plan ✨
+                Generate My Plan
               </button>
             </div>
           </div>
@@ -400,4 +594,3 @@ export default function PlanBuilderPage() {
     </div>
   );
 }
-

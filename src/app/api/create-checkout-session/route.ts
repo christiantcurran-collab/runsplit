@@ -2,13 +2,22 @@ import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { createServerSupabase } from "@/lib/supabase-server";
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const supabase = createServerSupabase();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    // Parse optional body for plan selection (monthly/annual)
+    let plan: "monthly" | "annual" = "monthly";
+    try {
+      const body = await request.json();
+      if (body.plan === "annual") plan = "annual";
+    } catch {
+      // No body sent, default to monthly
     }
 
     // Check if user already has a Stripe customer ID
@@ -34,9 +43,12 @@ export async function POST() {
         .eq("id", user.id);
     }
 
-    const priceId = process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID;
+    const priceId = plan === "annual"
+      ? process.env.NEXT_PUBLIC_STRIPE_ANNUAL_PRICE_ID
+      : process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID;
+
     if (!priceId) {
-      return NextResponse.json({ error: "Stripe price not configured" }, { status: 500 });
+      return NextResponse.json({ error: `Stripe ${plan} price not configured` }, { status: 500 });
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -49,6 +61,7 @@ export async function POST() {
       subscription_data: {
         metadata: { supabase_user_id: user.id },
       },
+      allow_promotion_codes: true,
     });
 
     return NextResponse.json({ url: session.url });
@@ -60,4 +73,3 @@ export async function POST() {
     );
   }
 }
-

@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createServiceSupabase } from "@/lib/supabase-server";
 import { DISTANCES, type DistanceKey, estimateVO2max, calculateTrainingPaces, formatTimeFromSeconds } from "@/lib/running-math";
@@ -101,7 +100,10 @@ export async function POST(request: Request) {
     };
 
     if (!process.env.ANTHROPIC_API_KEY) {
-      return NextResponse.json({ error: "AI service not configured. Please add ANTHROPIC_API_KEY." }, { status: 500 });
+      return new Response(
+        JSON.stringify({ error: "AI service not configured. Please add ANTHROPIC_API_KEY." }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
     }
 
     // Calculate derived data for context
@@ -124,21 +126,19 @@ export async function POST(request: Request) {
     // For low-base runners targeting long races, recommend minimum plan lengths
     const raceDistKm = raceDistMeters / 1000;
     let minRecommendedWeeks = 8;
-    if (raceDistKm >= 42) minRecommendedWeeks = 16; // Marathon
-    else if (raceDistKm >= 21) minRecommendedWeeks = 12; // Half marathon
-    else if (raceDistKm >= 10) minRecommendedWeeks = 8; // 10k
+    if (raceDistKm >= 42) minRecommendedWeeks = 16;
+    else if (raceDistKm >= 21) minRecommendedWeeks = 12;
+    else if (raceDistKm >= 10) minRecommendedWeeks = 8;
 
-    // If runner's base is very low relative to race, need more time
     if (fitness.currentWeeklyKm < raceDistKm * 0.5) {
       minRecommendedWeeks = Math.max(minRecommendedWeeks, raceDistKm >= 42 ? 20 : raceDistKm >= 21 ? 14 : 10);
     }
 
-    const planWeeks = Math.min(weeksUntilRace, 24); // Cap at 24 weeks
+    const planWeeks = Math.min(weeksUntilRace, 24);
     const isCompressed = planWeeks < minRecommendedWeeks;
 
     const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-    // Build schedule context
     let scheduleGuidance = "";
     if (fitness.trainingDaysPerWeek === 1) {
       scheduleGuidance = `CRITICAL: This runner can ONLY run 1 day per week. Design one progressively longer run each week on ${fitness.longRunDay}. All other days must be rest or cross-training/strength (only if requested). The single weekly run IS the long run. Build it gradually from ${fitness.longestRecentRunKm}km toward race distance.`;
@@ -198,77 +198,184 @@ Generate the complete ${planWeeks}-week plan as JSON. VERIFY that each week has 
 
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 32000,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: userPrompt }],
+    // Use streaming for live updates
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        const sendEvent = (event: string, data: unknown) => {
+          controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+        };
+
+        try {
+          // Phase 1: Analyzing
+          sendEvent("progress", {
+            phase: "analyzing",
+            message: "Analysing your fitness profile and goals...",
+            percent: 10,
+          });
+
+          // Phase 2: Start streaming from Claude
+          sendEvent("progress", {
+            phase: "designing",
+            message: `Designing your ${planWeeks}-week ${raceDistName} plan...`,
+            percent: 20,
+          });
+
+          let fullText = "";
+          let lastProgressPercent = 20;
+
+          const messageStream = anthropic.messages.stream({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 32000,
+            system: SYSTEM_PROMPT,
+            messages: [{ role: "user", content: userPrompt }],
+          });
+
+          // Track weeks being generated
+          let weeksDetected = 0;
+
+          messageStream.on("text", (text) => {
+            fullText += text;
+
+            // Count weeks generated so far for progress updates
+            const weekMatches = fullText.match(/"weekNumber"\s*:\s*(\d+)/g);
+            const newWeeksDetected = weekMatches?.length || 0;
+
+            if (newWeeksDetected > weeksDetected) {
+              weeksDetected = newWeeksDetected;
+              const progressPercent = Math.min(85, 25 + Math.floor((weeksDetected / planWeeks) * 60));
+
+              if (progressPercent > lastProgressPercent) {
+                lastProgressPercent = progressPercent;
+
+                let phaseMsg = `Building week ${weeksDetected} of ${planWeeks}...`;
+                if (weeksDetected <= 2) {
+                  phaseMsg = `Setting up your base phase — Week ${weeksDetected}...`;
+                } else if (weeksDetected >= planWeeks - 2) {
+                  phaseMsg = `Creating your taper and race week...`;
+                } else if (weeksDetected >= Math.floor(planWeeks * 0.6)) {
+                  phaseMsg = `Building peak training — Week ${weeksDetected}...`;
+                } else {
+                  phaseMsg = `Designing progressive build — Week ${weeksDetected}...`;
+                }
+
+                sendEvent("progress", {
+                  phase: "building",
+                  message: phaseMsg,
+                  percent: progressPercent,
+                  weeksBuilt: weeksDetected,
+                  totalWeeks: planWeeks,
+                });
+              }
+            }
+          });
+
+          // Wait for the stream to complete
+          const finalMessage = await messageStream.finalMessage();
+          const responseText = finalMessage.content[0].type === "text" ? finalMessage.content[0].text : fullText;
+
+          sendEvent("progress", {
+            phase: "finalizing",
+            message: "Finalising your personalised plan...",
+            percent: 90,
+          });
+
+          // Parse the JSON
+          let planData;
+          try {
+            planData = JSON.parse(responseText);
+          } catch {
+            const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)```/);
+            if (jsonMatch) {
+              planData = JSON.parse(jsonMatch[1].trim());
+            } else {
+              const firstBrace = responseText.indexOf("{");
+              const lastBrace = responseText.lastIndexOf("}");
+              if (firstBrace !== -1 && lastBrace !== -1) {
+                planData = JSON.parse(responseText.slice(firstBrace, lastBrace + 1));
+              } else {
+                throw new Error("Could not parse AI response as JSON");
+              }
+            }
+          }
+
+          // Save plan to database
+          sendEvent("progress", {
+            phase: "saving",
+            message: "Saving your plan...",
+            percent: 95,
+          });
+
+          const supabase = createServiceSupabase();
+
+          const planName = goal.raceName
+            ? `${raceDistName} Plan — ${goal.raceName}`
+            : `${raceDistName} Training Plan`;
+
+          const planStartDate = new Date();
+          planStartDate.setDate(planStartDate.getDate() + (1 - planStartDate.getDay() + 7) % 7);
+
+          const { data: plan, error: dbError } = await supabase
+            .from("training_plans")
+            .insert({
+              user_id: userId,
+              name: planName,
+              goal_race_distance_meters: raceDistMeters,
+              goal_race_time_seconds: goal.targetTimeSeconds || null,
+              goal_race_date: goal.raceDate,
+              plan_start_date: planStartDate.toISOString().split("T")[0],
+              plan_weeks: planWeeks,
+              experience_level: "intermediate",
+              weekly_days: fitness.trainingDaysPerWeek,
+              plan_data: planData,
+              status: "active",
+            })
+            .select()
+            .single();
+
+          if (dbError) {
+            console.error("DB error:", dbError);
+            sendEvent("error", { message: "Failed to save plan" });
+            controller.close();
+            return;
+          }
+
+          // Complete!
+          sendEvent("progress", {
+            phase: "complete",
+            message: "Your plan is ready!",
+            percent: 100,
+          });
+
+          sendEvent("complete", {
+            planId: plan.id,
+            planWeeks,
+            raceDistance: raceDistName,
+          });
+
+          controller.close();
+        } catch (err) {
+          console.error("Plan generation stream error:", err);
+          sendEvent("error", {
+            message: err instanceof Error ? err.message : "Failed to generate plan",
+          });
+          controller.close();
+        }
+      },
     });
 
-    // Extract the JSON from the response
-    const responseText = message.content[0].type === "text" ? message.content[0].text : "";
-
-    let planData;
-    try {
-      // Try parsing directly
-      planData = JSON.parse(responseText);
-    } catch {
-      // Try extracting JSON from markdown code fences
-      const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) {
-        planData = JSON.parse(jsonMatch[1].trim());
-      } else {
-        // Try finding first { to last }
-        const firstBrace = responseText.indexOf("{");
-        const lastBrace = responseText.lastIndexOf("}");
-        if (firstBrace !== -1 && lastBrace !== -1) {
-          planData = JSON.parse(responseText.slice(firstBrace, lastBrace + 1));
-        } else {
-          throw new Error("Could not parse AI response as JSON");
-        }
-      }
-    }
-
-    // Save plan to database
-    const supabase = createServiceSupabase();
-
-    const planName = goal.raceName
-      ? `${raceDistName} Plan — ${goal.raceName}`
-      : `${raceDistName} Training Plan`;
-
-    const planStartDate = new Date();
-    planStartDate.setDate(planStartDate.getDate() + (1 - planStartDate.getDay() + 7) % 7); // Next Monday
-
-    const { data: plan, error: dbError } = await supabase
-      .from("training_plans")
-      .insert({
-        user_id: userId,
-        name: planName,
-        goal_race_distance_meters: raceDistMeters,
-        goal_race_time_seconds: goal.targetTimeSeconds || null,
-        goal_race_date: goal.raceDate,
-        plan_start_date: planStartDate.toISOString().split("T")[0],
-        plan_weeks: planWeeks,
-        experience_level: "intermediate",
-        weekly_days: fitness.trainingDaysPerWeek,
-        plan_data: planData,
-        status: "active",
-      })
-      .select()
-      .single();
-
-    if (dbError) {
-      console.error("DB error:", dbError);
-      return NextResponse.json({ error: "Failed to save plan" }, { status: 500 });
-    }
-
-    return NextResponse.json({ planId: plan.id, plan: planData });
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
   } catch (err: unknown) {
     console.error("Plan generation error:", err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to generate plan" },
-      { status: 500 }
+    return new Response(
+      JSON.stringify({ error: err instanceof Error ? err.message : "Failed to generate plan" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 }
-

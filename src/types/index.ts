@@ -16,7 +16,37 @@ export interface Profile {
   stripe_customer_id: string | null;
   subscription_status: "none" | "trialing" | "active" | "cancelled";
   trial_ends_at: string | null;
+  // Strava
+  strava_athlete_id: number | null;
+  strava_access_token: string | null;
+  strava_refresh_token: string | null;
+  strava_token_expires_at: number | null;
+  strava_connected_at: string | null;
+  // Email preferences
+  email_weekly_summary: boolean;
+  email_notifications_enabled: boolean;
   created_at: string;
+}
+
+export interface StravaActivity {
+  id: string;
+  user_id: string;
+  strava_activity_id: number;
+  name: string | null;
+  activity_type: string | null;
+  distance_meters: number | null;
+  moving_time_seconds: number | null;
+  elapsed_time_seconds: number | null;
+  total_elevation_gain: number | null;
+  start_date: string | null;
+  average_speed: number | null;
+  max_speed: number | null;
+  average_heartrate: number | null;
+  max_heartrate: number | null;
+  suffer_score: number | null;
+  calories: number | null;
+  map_polyline: string | null;
+  synced_at: string;
 }
 
 export interface RaceResult {
@@ -135,4 +165,5 @@ export interface PlanBuilderData {
   fitness: PlanBuilderFitness;
   preferences: PlanBuilderPreferences;
 }
+
 

@@ -23,6 +23,15 @@ CREATE TABLE IF NOT EXISTS profiles (
   stripe_customer_id TEXT UNIQUE,
   subscription_status TEXT DEFAULT 'none' CHECK (subscription_status IN ('none', 'trialing', 'active', 'cancelled')),
   trial_ends_at TIMESTAMPTZ,
+  -- Strava integration
+  strava_athlete_id BIGINT UNIQUE,
+  strava_access_token TEXT,
+  strava_refresh_token TEXT,
+  strava_token_expires_at BIGINT,
+  strava_connected_at TIMESTAMPTZ,
+  -- Email notifications
+  email_weekly_summary BOOLEAN DEFAULT TRUE,
+  email_notifications_enabled BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -102,6 +111,46 @@ CREATE INDEX idx_training_log_user ON training_log(user_id);
 CREATE INDEX idx_training_log_plan ON training_log(plan_id);
 
 -- ============================================
+-- STRAVA ACTIVITIES
+-- ============================================
+CREATE TABLE IF NOT EXISTS strava_activities (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  strava_activity_id BIGINT UNIQUE NOT NULL,
+  name TEXT,
+  activity_type TEXT,
+  distance_meters NUMERIC,
+  moving_time_seconds INTEGER,
+  elapsed_time_seconds INTEGER,
+  total_elevation_gain NUMERIC,
+  start_date TIMESTAMPTZ,
+  average_speed NUMERIC,
+  max_speed NUMERIC,
+  average_heartrate NUMERIC,
+  max_heartrate NUMERIC,
+  suffer_score INTEGER,
+  calories NUMERIC,
+  map_polyline TEXT,
+  synced_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_strava_activities_user ON strava_activities(user_id);
+CREATE INDEX idx_strava_activities_strava_id ON strava_activities(strava_activity_id);
+
+-- ============================================
+-- EMAIL LOG (track sent emails)
+-- ============================================
+CREATE TABLE IF NOT EXISTS email_log (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  email_type TEXT NOT NULL,
+  sent_at TIMESTAMPTZ DEFAULT NOW(),
+  metadata JSONB
+);
+
+CREATE INDEX idx_email_log_user ON email_log(user_id);
+
+-- ============================================
 -- ROW LEVEL SECURITY (RLS)
 -- ============================================
 
@@ -161,4 +210,22 @@ CREATE POLICY "Users can update own log entries"
 
 CREATE POLICY "Users can delete own log entries"
   ON training_log FOR DELETE USING (auth.uid() = user_id);
+
+-- Strava Activities
+ALTER TABLE strava_activities ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own strava activities"
+  ON strava_activities FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own strava activities"
+  ON strava_activities FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own strava activities"
+  ON strava_activities FOR DELETE USING (auth.uid() = user_id);
+
+-- Email Log
+ALTER TABLE email_log ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own email log"
+  ON email_log FOR SELECT USING (auth.uid() = user_id);
 
