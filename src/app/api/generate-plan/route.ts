@@ -91,13 +91,29 @@ Important:
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response(
+        JSON.stringify({ error: "Invalid request body. JSON is required." }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     const { goal, fitness, preferences, userId } = body as {
       goal: PlanBuilderGoal;
       fitness: PlanBuilderFitness;
       preferences: PlanBuilderPreferences;
       userId: string;
     };
+
+    if (!userId || !goal || !fitness || !preferences) {
+      return new Response(
+        JSON.stringify({ error: "Missing required fields: userId, goal, fitness, preferences." }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     if (!process.env.ANTHROPIC_API_KEY) {
       return new Response(

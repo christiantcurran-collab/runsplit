@@ -56,16 +56,23 @@ export async function POST(request: Request) {
         ? aiResponse.content[0].text
         : "Thanks for reaching out! Our team will get back to you soon.";
 
-    // Log the support ticket in Supabase
-    const supabase = createServiceSupabase();
-    await supabase.from("support_tickets").insert({
-      name: name || null,
-      email,
-      subject: subject || null,
-      message,
-      ai_response: responseText,
-      status: "auto_replied",
-    });
+    // Log the support ticket in Supabase (table may not exist yet — fail gracefully)
+    try {
+      const supabase = createServiceSupabase();
+      const { error: insertError } = await supabase.from("support_tickets").insert({
+        name: name || null,
+        email,
+        subject: subject || null,
+        message,
+        ai_response: responseText,
+        status: "auto_replied",
+      });
+      if (insertError) {
+        console.warn("Could not log support ticket (table may not exist):", insertError.message);
+      }
+    } catch (dbErr) {
+      console.warn("Support ticket DB error:", dbErr);
+    }
 
     // Send auto-reply email if email provider configured
     await sendSupportReply({
