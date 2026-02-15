@@ -13,10 +13,16 @@ export function generateStaticParams() {
 
 export function generateMetadata({ params }: Props): Metadata {
   const plan = getSamplePlan(params.slug);
-  if (!plan) return { title: "Plan Not Found — RunSplit" };
+  if (!plan) return { title: "Plan Not Found" };
   return {
-    title: `${plan.title} Training Plan — RunSplit`,
-    description: plan.description,
+    title: `${plan.title} — Free Training Plan`,
+    description: `${plan.description} ${plan.weeks}-week plan, ${plan.daysPerWeek} days per week. Free to view, no signup required.`,
+    alternates: { canonical: `/plans/${params.slug}` },
+    openGraph: {
+      title: `${plan.title} — Free Training Plan | RunSplit`,
+      description: plan.description,
+      url: `/plans/${params.slug}`,
+    },
   };
 }
 

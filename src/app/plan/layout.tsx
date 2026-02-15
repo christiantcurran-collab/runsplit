@@ -1,7 +1,12 @@
 import RequireAuth from "@/components/RequireAuth";
+import SubscriptionGate from "@/components/SubscriptionGate";
 
 export default function PlanLayout({ children }: { children: React.ReactNode }) {
-  return <RequireAuth>{children}</RequireAuth>;
+  return (
+    <RequireAuth>
+      <SubscriptionGate>{children}</SubscriptionGate>
+    </RequireAuth>
+  );
 }
 
 

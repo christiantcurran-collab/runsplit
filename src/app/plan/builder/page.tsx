@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { DISTANCES, type DistanceKey } from "@/lib/running-math";
 import type { PlanBuilderGoal, PlanBuilderFitness, PlanBuilderPreferences } from "@/types";
@@ -19,6 +19,8 @@ const PROGRESS_TIPS = [
 
 export default function PlanBuilderPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const justSubscribed = searchParams.get("subscribed") === "true";
   const { user, profile } = useAuth();
   const [step, setStep] = useState(1);
   const [generating, setGenerating] = useState(false);
@@ -310,11 +312,20 @@ export default function PlanBuilderPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 sm:py-12 px-4">
       <div className="max-w-2xl mx-auto">
+        {/* Welcome banner after subscription */}
+        {justSubscribed && (
+          <div className="bg-brand/10 border border-brand/20 rounded-xl p-4 mb-6 text-center">
+            <p className="text-brand font-semibold text-sm">
+              Welcome to RunSplit Pro! 🎉 Let&apos;s build your personalised training plan.
+            </p>
+          </div>
+        )}
+
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="font-heading font-bold text-3xl mb-2">Build Your Training Plan</h1>
           <p className="text-gray-500">
-            Our AI coach will create a personalised plan just for you.
+            Answer 3 quick questions and our AI coach will create a plan just for you.
           </p>
         </div>
 

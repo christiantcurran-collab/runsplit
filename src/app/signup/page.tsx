@@ -12,6 +12,7 @@ export default function SignupPage() {
   const [success, setSuccess] = useState(false);
 
   const supabase = createClient();
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +22,7 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback?redirect=/onboarding` },
+      options: { emailRedirectTo: `${siteUrl}/auth/callback?redirect=/onboarding` },
     });
 
     if (error) {
@@ -35,14 +36,14 @@ export default function SignupPage() {
   const handleGoogleSignup = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback?redirect=/onboarding` },
+      options: { redirectTo: `${siteUrl}/auth/callback?redirect=/onboarding` },
     });
   };
 
   const handleAppleSignup = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "apple",
-      options: { redirectTo: `${window.location.origin}/auth/callback?redirect=/onboarding` },
+      options: { redirectTo: `${siteUrl}/auth/callback?redirect=/onboarding` },
     });
   };
 

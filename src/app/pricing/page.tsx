@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { useRouter } from "next/navigation";
+import { analytics } from "@/lib/analytics";
 
 const freeFeatures = [
   "All 12 running tools",
@@ -33,6 +34,10 @@ export default function PricingPage() {
 
   const isPro = profile?.subscription_status === "active" || profile?.subscription_status === "trialing";
 
+  useEffect(() => {
+    analytics.pricingViewed();
+  }, []);
+
   const handleSubscribe = async () => {
     if (!user) {
       router.push("/signup");
@@ -44,6 +49,7 @@ export default function PricingPage() {
     }
 
     setLoading(true);
+    analytics.checkoutStarted(billingPeriod);
     try {
       const res = await fetch("/api/create-checkout-session", {
         method: "POST",

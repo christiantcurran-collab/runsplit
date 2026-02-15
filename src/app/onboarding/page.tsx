@@ -64,7 +64,8 @@ export default function OnboardingPage() {
     }
 
     await refreshProfile();
-    router.push("/plan");
+    // Send to pricing so they can subscribe before accessing the plan builder
+    router.push("/pricing");
   };
 
   return (
@@ -159,13 +160,14 @@ export default function OnboardingPage() {
           </div>
 
           <button type="submit" disabled={saving}
-            className="w-full bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50">
-            {saving ? "Saving..." : "Continue to Dashboard"}
+            className="w-full bg-brand hover:bg-brand-hover text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50">
+            {saving ? "Saving..." : "Continue →"}
           </button>
         </form>
       </div>
     </div>
   );
 }
+
 
 

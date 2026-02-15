@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Age-Graded Running Calculator | Compare Performance by Age | RunSplit",
-  description: "Free age-graded running calculator. Compare your race performance across ages and genders using World Masters Athletics factors. See your age-graded percentage and level.",
+  title: "Age-Graded Running Calculator — Performance Rating",
+  description: "Free age-graded running calculator. See your performance percentage based on WMA/World Athletics standards. Compare your time fairly across ages and genders.",
+  alternates: { canonical: "/calculators/age-grade" },
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
-
-

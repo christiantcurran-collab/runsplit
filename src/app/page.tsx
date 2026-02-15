@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { analytics } from "@/lib/analytics";
 import {
   DISTANCES,
   type DistanceKey,
@@ -173,7 +175,10 @@ export default function HomePage() {
             </div>
 
             <button
-              onClick={() => setShowResults(true)}
+              onClick={() => {
+                setShowResults(true);
+                analytics.heroCalculatorUsed(selectedDist);
+              }}
               disabled={totalSec <= 0}
               className="w-full mt-5 bg-brand hover:bg-brand-hover text-white font-heading text-sm font-bold py-[13px] rounded-lg transition-all disabled:opacity-40"
             >
@@ -330,26 +335,47 @@ export default function HomePage() {
       {/* ─── HOW IT WORKS ─── */}
       <section className="bg-bg-page py-16 sm:py-20 border-t border-[#E4E4E8]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-heading font-bold text-2xl sm:text-3xl text-text-primary mb-3">
-              Powered by your data
-            </h2>
-            <p className="text-text-secondary text-lg">
-              Connect your watch. Get intelligent insights.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[
-              { step: "01", title: "Connect", desc: "Link Strava, Garmin, or enter a recent race result manually." },
-              { step: "02", title: "AI Analyses", desc: "Your history, fitness trends, strengths, and limiters — analysed instantly." },
-              { step: "03", title: "You Get", desc: "A training plan that actually fits your life and your goals." },
-            ].map((item) => (
-              <div key={item.step} className="bg-bg-card rounded-xl border border-[#E4E4E8] p-6">
-                <span className="font-mono text-xs font-bold text-brand tracking-wider">{item.step}</span>
-                <h3 className="font-heading font-bold text-lg text-text-primary mt-3 mb-2">{item.title}</h3>
-                <p className="text-sm text-text-secondary leading-relaxed">{item.desc}</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+            {/* Image */}
+            <div className="relative rounded-2xl overflow-hidden aspect-[4/5] lg:aspect-[3/4] order-2 lg:order-1">
+              <Image
+                src="/images/runner-male.webp"
+                alt="Runner training in the city at golden hour"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                priority={false}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+            </div>
+
+            {/* Content */}
+            <div className="order-1 lg:order-2">
+              <p className="font-mono text-[11px] tracking-[3px] uppercase text-brand mb-4">How it works</p>
+              <h2 className="font-heading font-bold text-2xl sm:text-3xl text-text-primary mb-3">
+                Powered by your data
+              </h2>
+              <p className="text-text-secondary text-base mb-8 leading-relaxed">
+                Connect your watch. Get intelligent insights. Train smarter.
+              </p>
+              <div className="space-y-5">
+                {[
+                  { step: "01", title: "Connect", desc: "Link Strava, Garmin, or enter a recent race result manually." },
+                  { step: "02", title: "AI Analyses", desc: "Your history, fitness trends, strengths, and limiters — analysed instantly." },
+                  { step: "03", title: "You Get", desc: "A training plan that actually fits your life and your goals." },
+                ].map((item) => (
+                  <div key={item.step} className="flex gap-4 items-start">
+                    <span className="flex-shrink-0 w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center font-mono text-xs font-bold text-brand">
+                      {item.step}
+                    </span>
+                    <div>
+                      <h3 className="font-heading font-bold text-base text-text-primary mb-1">{item.title}</h3>
+                      <p className="text-sm text-text-secondary leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
@@ -389,21 +415,35 @@ export default function HomePage() {
       </section>
 
       {/* ─── PRO CTA ─── */}
-      <section className="bg-bg-page py-16 sm:py-20 border-t-[3px] border-brand">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-heading font-extrabold text-[32px] text-text-primary mb-3">
+      <section className="relative bg-bg-dark text-text-on-dark py-20 sm:py-28 overflow-hidden">
+        {/* Background image */}
+        <div className="absolute inset-0">
+          <Image
+            src="/images/runner-female.webp"
+            alt="Runner training at sunset in golden light"
+            fill
+            className="object-cover object-center"
+            sizes="100vw"
+            priority={false}
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
+        </div>
+
+        <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="font-mono text-[11px] tracking-[3px] uppercase text-brand mb-5">RunSplit Pro</p>
+          <h2 className="font-heading font-extrabold text-[32px] sm:text-[40px] text-white mb-4 leading-tight">
             Your AI coach is ready.
           </h2>
-          <p className="text-text-secondary text-base max-w-[440px] mx-auto leading-[1.6] mb-7">
+          <p className="text-gray-300 text-base max-w-[460px] mx-auto leading-[1.7] mb-8">
             Connect Strava. Set your goal. Get a plan built for your fitness, your schedule, your life.
           </p>
           <Link
             href="/signup"
-            className="inline-block bg-brand hover:bg-brand-hover text-white font-heading text-[15px] font-bold px-9 py-3.5 rounded-[10px] transition-all hover:-translate-y-0.5"
+            className="inline-block bg-brand hover:bg-brand-hover text-white font-heading text-[15px] font-bold px-9 py-3.5 rounded-[10px] transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand/25"
           >
             Get started — £4.99/month
           </Link>
-          <p className="text-[13px] text-text-muted mt-3">
+          <p className="text-[13px] text-gray-400 mt-4">
             Cancel anytime. No free trial — just results.
           </p>
         </div>

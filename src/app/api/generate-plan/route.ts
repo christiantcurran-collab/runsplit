@@ -106,6 +106,22 @@ export async function POST(request: Request) {
       );
     }
 
+    // Server-side subscription check — only Pro users can generate plans
+    const supabaseCheck = createServiceSupabase();
+    const { data: userProfile } = await supabaseCheck
+      .from("profiles")
+      .select("subscription_status")
+      .eq("id", userId)
+      .single();
+
+    const isPro = userProfile?.subscription_status === "active" || userProfile?.subscription_status === "trialing";
+    if (!isPro) {
+      return new Response(
+        JSON.stringify({ error: "Pro subscription required to generate training plans." }),
+        { status: 403, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     // Calculate derived data for context
     const raceDistMeters = goal.raceDistance === "custom"
       ? (goal.customDistanceMeters || 42195)

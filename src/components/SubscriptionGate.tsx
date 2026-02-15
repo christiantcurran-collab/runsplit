@@ -9,12 +9,12 @@ interface SubscriptionGateProps {
 }
 
 export default function SubscriptionGate({ children, fallback }: SubscriptionGateProps) {
-  const { profile, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="w-8 h-8 border-3 border-brand-orange border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-3 border-brand border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -25,30 +25,73 @@ export default function SubscriptionGate({ children, fallback }: SubscriptionGat
 
   if (!isPro) {
     if (fallback) return <>{fallback}</>;
+
+    const displayName = profile?.display_name || user?.email?.split("@")[0] || "";
+
     return (
-      <div className="max-w-lg mx-auto text-center py-16 px-4">
-        <div className="w-20 h-20 bg-brand-orange/10 rounded-full flex items-center justify-center mx-auto mb-6">
-          <svg className="w-10 h-10 text-brand-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-        </div>
-        <h2 className="font-heading font-bold text-2xl mb-3">This is a Pro feature</h2>
-        <p className="text-gray-500 mb-6">
-          Upgrade to RunSplit Pro to access AI-powered training plans, race day strategies, and your full training log.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link
-            href="/pricing"
-            className="bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold px-8 py-3 rounded-xl transition-colors"
-          >
-            View Pricing
-          </Link>
-          <Link
-            href="/calculators"
-            className="border border-gray-300 text-gray-700 font-semibold px-8 py-3 rounded-xl hover:bg-gray-50 transition-colors"
-          >
-            Free Calculators
-          </Link>
+      <div className="min-h-[70vh] flex items-center justify-center px-4">
+        <div className="max-w-lg w-full text-center py-16">
+          {/* Greeting */}
+          {displayName && (
+            <p className="text-sm text-text-secondary mb-2">
+              Hey {displayName} 👋
+            </p>
+          )}
+
+          <div className="w-20 h-20 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+
+          <h2 className="font-heading font-bold text-2xl sm:text-3xl mb-3">
+            You&apos;re one step away
+          </h2>
+          <p className="text-text-secondary mb-8 max-w-md mx-auto leading-relaxed">
+            Subscribe to RunSplit Pro to unlock AI-powered training plans, race day strategy, Strava sync, and weekly coaching summaries.
+          </p>
+
+          {/* Pricing highlight */}
+          <div className="bg-bg-card border border-[#E4E4E8] rounded-xl p-5 mb-6 max-w-sm mx-auto">
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <span className="font-heading font-extrabold text-3xl text-text-primary">&pound;4.99</span>
+              <span className="text-text-muted text-sm">/month</span>
+            </div>
+            <ul className="text-sm text-text-secondary space-y-1.5 text-left">
+              <li className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-brand flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                AI custom training plans
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-brand flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                Race day pacing strategy
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-brand flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                Strava sync &amp; training log
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-brand flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                Weekly email summaries
+              </li>
+            </ul>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              href="/pricing"
+              className="bg-brand hover:bg-brand-hover text-white font-semibold px-8 py-3 rounded-xl transition-colors"
+            >
+              Subscribe to Pro
+            </Link>
+            <Link
+              href="/tools"
+              className="border border-gray-300 text-gray-700 font-semibold px-8 py-3 rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              Free Tools
+            </Link>
+          </div>
+          <p className="text-xs text-text-muted mt-4">Cancel anytime. No lock-in.</p>
         </div>
       </div>
     );
@@ -56,5 +99,3 @@ export default function SubscriptionGate({ children, fallback }: SubscriptionGat
 
   return <>{children}</>;
 }
-
-

@@ -23,6 +23,7 @@ function LoginContent() {
   const redirect = searchParams.get("redirect") || "/plan";
 
   const supabase = createClient();
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +62,7 @@ function LoginContent() {
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback?redirect=${redirect}` },
+      options: { emailRedirectTo: `${siteUrl}/auth/callback?redirect=${redirect}` },
     });
 
     if (error) {
@@ -75,14 +76,14 @@ function LoginContent() {
   const handleGoogleLogin = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback?redirect=${redirect}` },
+      options: { redirectTo: `${siteUrl}/auth/callback?redirect=${redirect}` },
     });
   };
 
   const handleAppleLogin = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "apple",
-      options: { redirectTo: `${window.location.origin}/auth/callback?redirect=${redirect}` },
+      options: { redirectTo: `${siteUrl}/auth/callback?redirect=${redirect}` },
     });
   };
 

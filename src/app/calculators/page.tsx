@@ -2,9 +2,15 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Free Running Calculators | Pace, Speed, Race Predictions & More | RunSplit",
+  title: "Free Running Calculators — Pace, Speed, Race Predictions & More",
   description:
-    "12 free running calculators — pace, race time predictor, splits, training zones, VO2max, heart rate zones, calories, treadmill converter and more. No signup required.",
+    "12 free running calculators — pace, race time predictor, split planner, training zones, VO2max estimator, heart rate zones, calories burned, treadmill converter and more. No signup required. Instant results.",
+  alternates: { canonical: "/calculators" },
+  openGraph: {
+    title: "Free Running Calculators — RunSplit",
+    description: "12 free running calculators for pace, race predictions, training zones, VO2max and more.",
+    url: "/calculators",
+  },
 };
 
 const calculators = [

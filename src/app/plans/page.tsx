@@ -3,9 +3,15 @@ import type { Metadata } from "next";
 import { SAMPLE_PLANS } from "@/lib/sample-plans";
 
 export const metadata: Metadata = {
-  title: "Free Training Plans — RunSplit",
+  title: "Free Training Plans — 5K, 10K, Half Marathon & Marathon",
   description:
-    "Browse 5 free training plans for 5K, 10K, half marathon and marathon. Want a plan customised to you? Upgrade to RunSplit Pro.",
+    "Browse 5 free training plans for Couch to 5K, beginner 10K, intermediate half marathon, intermediate marathon, and sub-25 5K. Want a plan customised to you? Upgrade to RunSplit Pro.",
+  alternates: { canonical: "/plans" },
+  openGraph: {
+    title: "Free Running Training Plans — RunSplit",
+    description: "Free training plans for 5K, 10K, half marathon and marathon. From beginner to advanced.",
+    url: "/plans",
+  },
 };
 
 const LEVEL_COLORS = {
