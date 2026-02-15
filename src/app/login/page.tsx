@@ -44,7 +44,23 @@ function LoginContent() {
       }
 
       if (data?.session) {
-        window.location.href = redirect;
+        // Smart routing: check profile to decide where to send user
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("display_name, experience_level, subscription_status")
+          .eq("id", data.session.user.id)
+          .single();
+
+        const isOnboarded = profile?.experience_level || profile?.display_name;
+        const isPro = profile?.subscription_status === "active" || profile?.subscription_status === "trialing";
+
+        if (!isOnboarded) {
+          window.location.href = "/onboarding";
+        } else if (!isPro) {
+          window.location.href = "/pricing";
+        } else {
+          window.location.href = redirect;
+        }
       } else {
         setError("Login succeeded but no session was returned. Try clearing your browser cache and cookies, then try again.");
         setLoading(false);
@@ -76,14 +92,14 @@ function LoginContent() {
   const handleGoogleLogin = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${siteUrl}/auth/callback?redirect=${redirect}` },
+      options: { redirectTo: `${siteUrl}/auth/callback` },
     });
   };
 
   const handleAppleLogin = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "apple",
-      options: { redirectTo: `${siteUrl}/auth/callback?redirect=${redirect}` },
+      options: { redirectTo: `${siteUrl}/auth/callback` },
     });
   };
 

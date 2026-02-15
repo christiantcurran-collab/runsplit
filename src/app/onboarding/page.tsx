@@ -71,6 +71,27 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-lg mx-auto">
+        {/* Progress stepper */}
+        <div className="flex items-center justify-center gap-2 mb-8">
+          {[
+            { step: 1, label: "Your profile" },
+            { step: 2, label: "Choose plan" },
+            { step: 3, label: "Start training" },
+          ].map((s, i) => (
+            <div key={s.step} className="flex items-center gap-2">
+              <div className={`flex items-center gap-2 ${s.step === 1 ? "text-brand" : "text-gray-400"}`}>
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 ${
+                  s.step === 1 ? "bg-brand text-white border-brand" : "border-gray-300 text-gray-400"
+                }`}>
+                  {s.step}
+                </div>
+                <span className="text-xs font-medium hidden sm:inline">{s.label}</span>
+              </div>
+              {i < 2 && <div className="w-8 sm:w-12 h-[2px] bg-gray-200 mx-1" />}
+            </div>
+          ))}
+        </div>
+
         <div className="text-center mb-8">
           <h1 className="font-heading font-bold text-3xl mb-2">Tell us about yourself</h1>
           <p className="text-gray-500">This helps us personalise your training plans.</p>

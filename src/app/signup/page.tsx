@@ -22,7 +22,7 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${siteUrl}/auth/callback?redirect=/onboarding` },
+      options: { emailRedirectTo: `${siteUrl}/auth/callback` },
     });
 
     if (error) {
@@ -36,14 +36,14 @@ export default function SignupPage() {
   const handleGoogleSignup = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${siteUrl}/auth/callback?redirect=/onboarding` },
+      options: { redirectTo: `${siteUrl}/auth/callback` },
     });
   };
 
   const handleAppleSignup = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "apple",
-      options: { redirectTo: `${siteUrl}/auth/callback?redirect=/onboarding` },
+      options: { redirectTo: `${siteUrl}/auth/callback` },
     });
   };
 
