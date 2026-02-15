@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import { useAuth } from "@/components/AuthProvider";
 import { DISTANCES, type DistanceKey } from "@/lib/running-math";
+import Link from "next/link";
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { user, refreshProfile } = useAuth();
+  const { user, loading, refreshProfile } = useAuth();
   const supabase = createClient();
 
   const [displayName, setDisplayName] = useState("");
@@ -29,7 +30,12 @@ export default function OnboardingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+
+    if (!user) {
+      setError("You need to be signed in to continue. Please log in or sign up first.");
+      return;
+    }
+
     setSaving(true);
     setError("");
 
@@ -64,9 +70,70 @@ export default function OnboardingPage() {
     }
 
     await refreshProfile();
-    // Send to pricing so they can subscribe before accessing the plan builder
-    router.push("/pricing");
+
+    // Smart routing: re-fetch profile to check subscription status
+    const { data: freshProfile } = await supabase
+      .from("profiles")
+      .select("subscription_status")
+      .eq("id", user.id)
+      .single();
+
+    const isPro =
+      freshProfile?.subscription_status === "active" ||
+      freshProfile?.subscription_status === "trialing";
+
+    if (isPro) {
+      // Already subscribed — go straight to plan builder
+      router.push("/plan/builder?subscribed=true");
+    } else {
+      // Not yet subscribed — show pricing
+      router.push("/pricing");
+    }
   };
+
+  // Show loading spinner while auth is initialising
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // If not logged in, show a clear message
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <h1 className="font-heading font-bold text-2xl text-text-primary mb-3">
+            Sign in to get started
+          </h1>
+          <p className="text-text-secondary text-sm mb-8">
+            Create an account or sign in to set up your running profile and start training.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              href="/signup"
+              className="bg-brand hover:bg-brand-hover text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+            >
+              Create Account
+            </Link>
+            <Link
+              href="/login?redirect=/onboarding"
+              className="border border-gray-300 hover:border-gray-400 text-text-primary font-semibold px-6 py-3 rounded-xl transition-colors"
+            >
+              Log In
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
@@ -98,7 +165,14 @@ export default function OnboardingPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6">
-          {error && <div className="bg-red-50 text-red-600 text-sm rounded-lg p-3">{error}</div>}
+          {error && (
+            <div className="bg-red-50 text-red-600 text-sm rounded-lg p-3 flex items-start gap-2">
+              <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{error}</span>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Name (optional)</label>
@@ -189,6 +263,3 @@ export default function OnboardingPage() {
     </div>
   );
 }
-
-
-
