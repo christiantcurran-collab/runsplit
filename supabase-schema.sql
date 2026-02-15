@@ -151,6 +151,24 @@ CREATE TABLE IF NOT EXISTS email_log (
 CREATE INDEX idx_email_log_user ON email_log(user_id);
 
 -- ============================================
+-- SUPPORT TICKETS (AI-powered support inbox)
+-- ============================================
+CREATE TABLE IF NOT EXISTS support_tickets (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT,
+  email TEXT NOT NULL,
+  subject TEXT,
+  message TEXT NOT NULL,
+  ai_response TEXT,
+  status TEXT DEFAULT 'auto_replied' CHECK (status IN ('auto_replied', 'open', 'in_progress', 'resolved', 'closed')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  resolved_at TIMESTAMPTZ
+);
+
+CREATE INDEX idx_support_tickets_email ON support_tickets(email);
+CREATE INDEX idx_support_tickets_status ON support_tickets(status);
+
+-- ============================================
 -- ROW LEVEL SECURITY (RLS)
 -- ============================================
 

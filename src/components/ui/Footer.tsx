@@ -69,6 +69,9 @@ export default function Footer() {
               <Link href="/coach" className="text-sm text-text-dark-sec hover:text-white transition-colors">
                 AI Coach
               </Link>
+              <Link href="/support" className="text-sm text-text-dark-sec hover:text-white transition-colors">
+                Support
+              </Link>
             </div>
           </div>
         </div>

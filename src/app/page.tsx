@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { analytics } from "@/lib/analytics";
 import {
@@ -44,6 +44,16 @@ export default function HomePage() {
   const [targetM, setTargetM] = useState(30);
   const [targetS, setTargetS] = useState(0);
   const [showResults, setShowResults] = useState(false);
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  const handleShowResults = useCallback(() => {
+    setShowResults(true);
+    analytics.heroCalculatorUsed(selectedDist);
+    // Scroll to results after a brief delay for the animation to start
+    setTimeout(() => {
+      resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  }, [selectedDist]);
 
   const distMeters = DISTANCES[selectedDist as DistanceKey]?.meters || 42195;
   const totalSec = timeToSeconds({ hours: targetH, minutes: targetM, seconds: targetS });
@@ -175,10 +185,7 @@ export default function HomePage() {
             </div>
 
             <button
-              onClick={() => {
-                setShowResults(true);
-                analytics.heroCalculatorUsed(selectedDist);
-              }}
+              onClick={handleShowResults}
               disabled={totalSec <= 0}
               className="w-full mt-5 bg-brand hover:bg-brand-hover text-white font-heading text-sm font-bold py-[13px] rounded-lg transition-all disabled:opacity-40"
             >
@@ -201,6 +208,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── RESULTS (light contrast) ─── */}
+      <div ref={resultsRef} />
       <AnimatePresence>
         {showResults && analysis && (
           <motion.section
