@@ -38,7 +38,21 @@ export default function GoogleSignInButton({
 
     try {
       const siteUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
-      const callbackUrl = redirectUrl || `/auth/callback`;
+      
+      // If we have a custom redirectUrl with a redirect param, store it in localStorage
+      // This ensures it survives the OAuth flow
+      if (redirectUrl && redirectUrl.includes('redirect=')) {
+        const url = new URL(redirectUrl, siteUrl);
+        const redirectParam = url.searchParams.get('redirect');
+        if (redirectParam) {
+          localStorage.setItem('auth_redirect', redirectParam);
+          console.log('GoogleSignIn: Stored redirect in localStorage:', redirectParam);
+        }
+      }
+      
+      const callbackUrl = `/auth/callback`;
+      console.log('GoogleSignIn: Starting OAuth with callback:', `${siteUrl}${callbackUrl}`);
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
