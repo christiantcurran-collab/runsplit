@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import Link from "next/link";
 
@@ -14,12 +14,8 @@ export default function StartCheckoutPage() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (!loading && user) {
-      // User is logged in — send them to Stripe checkout immediately
-      initiateCheckout();
-    }
-  }, [user, loading]);
+  // Don't auto-trigger checkout on mount - wait for user to click
+  // This prevents issues with stale sessions or corrupted customer IDs
 
   async function initiateCheckout() {
     setCheckoutLoading(true);
@@ -45,13 +41,21 @@ export default function StartCheckoutPage() {
     }
   }
 
-  if (loading || checkoutLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-bg-dark flex flex-col items-center justify-center text-text-on-dark">
         <div className="w-14 h-14 border-4 border-brand border-t-transparent rounded-full animate-spin mb-6" />
-        <h2 className="font-heading font-bold text-xl mb-2">
-          {loading ? "Loading..." : "Redirecting to checkout..."}
-        </h2>
+        <h2 className="font-heading font-bold text-xl mb-2">Loading...</h2>
+        <p className="text-text-dark-sec text-sm">This will just take a moment.</p>
+      </div>
+    );
+  }
+
+  if (checkoutLoading) {
+    return (
+      <div className="min-h-screen bg-bg-dark flex flex-col items-center justify-center text-text-on-dark">
+        <div className="w-14 h-14 border-4 border-brand border-t-transparent rounded-full animate-spin mb-6" />
+        <h2 className="font-heading font-bold text-xl mb-2">Redirecting to checkout...</h2>
         <p className="text-text-dark-sec text-sm">This will just take a moment.</p>
       </div>
     );
@@ -84,22 +88,36 @@ export default function StartCheckoutPage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-bg-dark flex flex-col items-center justify-center text-text-on-dark px-4">
-        <div className="max-w-md w-full text-center">
-          <p className="text-red-400 mb-4">{error}</p>
-          <button
-            onClick={initiateCheckout}
-            className="bg-brand hover:bg-brand-hover text-white font-semibold px-6 py-2.5 rounded-lg"
-          >
-            Try Again
-          </button>
-        </div>
+  // User is logged in - show checkout button
+  return (
+    <div className="min-h-screen bg-bg-dark flex flex-col items-center justify-center text-text-on-dark px-4">
+      <div className="max-w-md w-full text-center">
+        <h1 className="font-heading font-bold text-2xl mb-3">
+          Ready to unlock your full plan?
+        </h1>
+        <p className="text-text-dark-sec mb-6">
+          Start your Pro subscription for £4.99/mo. Cancel anytime.
+        </p>
+        
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg p-3 mb-4">
+            {error}
+          </div>
+        )}
+        
+        <button
+          onClick={initiateCheckout}
+          disabled={checkoutLoading}
+          className="w-full bg-brand hover:bg-brand-hover text-white font-heading text-sm font-bold py-3.5 rounded-lg transition-all disabled:opacity-50"
+        >
+          Continue to Checkout →
+        </button>
+        
+        <p className="text-[11px] text-text-dark-muted mt-3">
+          7-day free trial · Cancel anytime
+        </p>
       </div>
-    );
-  }
-
-  return null;
+    </div>
+  );
 }
 

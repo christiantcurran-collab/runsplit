@@ -21,6 +21,7 @@ export default function TimeInput({
   showHours = true,
   dark = false,
 }: TimeInputProps) {
+  const hourRef = useRef<HTMLInputElement>(null);
   const minRef = useRef<HTMLInputElement>(null);
   const secRef = useRef<HTMLInputElement>(null);
 
@@ -37,20 +38,46 @@ export default function TimeInput({
     : "font-mono text-2xl font-bold text-text-muted";
 
   const handleHourChange = (val: string) => {
+    // Allow empty string
+    if (val === "") {
+      onChange(0, minutes, seconds);
+      return;
+    }
     const n = Math.min(99, Math.max(0, parseInt(val) || 0));
     onChange(n, minutes, seconds);
-    if (val.length >= 2 && minRef.current) minRef.current.focus();
+    // Auto-advance to minutes if 2 digits entered
+    if (val.length >= 2 && minRef.current) {
+      minRef.current.focus();
+      minRef.current.select();
+    }
   };
 
   const handleMinChange = (val: string) => {
+    if (val === "") {
+      onChange(hours, 0, seconds);
+      return;
+    }
     const n = Math.min(59, Math.max(0, parseInt(val) || 0));
     onChange(hours, n, seconds);
-    if (val.length >= 2 && secRef.current) secRef.current.focus();
+    // Auto-advance to seconds if 2 digits entered
+    if (val.length >= 2 && secRef.current) {
+      secRef.current.focus();
+      secRef.current.select();
+    }
   };
 
   const handleSecChange = (val: string) => {
+    if (val === "") {
+      onChange(hours, minutes, 0);
+      return;
+    }
     const n = Math.min(59, Math.max(0, parseInt(val) || 0));
     onChange(hours, minutes, n);
+  };
+
+  // Format value for display - show placeholder if 0, otherwise show number without leading zero
+  const formatValue = (value: number) => {
+    return value === 0 ? "" : String(value);
   };
 
   return (
@@ -60,40 +87,41 @@ export default function TimeInput({
         {showHours && (
           <>
             <input
-              type="number"
+              ref={hourRef}
+              type="text"
               inputMode="numeric"
-              min={0}
-              max={99}
-              value={hours}
-              onChange={(e) => handleHourChange(e.target.value)}
+              value={formatValue(hours)}
+              onChange={(e) => handleHourChange(e.target.value.replace(/\D/g, ""))}
+              onFocus={(e) => e.target.select()}
               className={`w-14 h-12 ${inputClasses}`}
-              placeholder="HH"
+              placeholder="h"
+              maxLength={2}
             />
             <span className={colonClasses}>:</span>
           </>
         )}
         <input
           ref={minRef}
-          type="number"
+          type="text"
           inputMode="numeric"
-          min={0}
-          max={59}
-          value={minutes}
-          onChange={(e) => handleMinChange(e.target.value)}
+          value={formatValue(minutes)}
+          onChange={(e) => handleMinChange(e.target.value.replace(/\D/g, ""))}
+          onFocus={(e) => e.target.select()}
           className={`w-14 h-12 ${inputClasses}`}
-          placeholder="MM"
+          placeholder="m"
+          maxLength={2}
         />
         <span className={colonClasses}>:</span>
         <input
           ref={secRef}
-          type="number"
+          type="text"
           inputMode="numeric"
-          min={0}
-          max={59}
-          value={seconds}
-          onChange={(e) => handleSecChange(e.target.value)}
+          value={formatValue(seconds)}
+          onChange={(e) => handleSecChange(e.target.value.replace(/\D/g, ""))}
+          onFocus={(e) => e.target.select()}
           className={`w-14 h-12 ${inputClasses}`}
-          placeholder="SS"
+          placeholder="s"
+          maxLength={2}
         />
       </div>
     </div>
