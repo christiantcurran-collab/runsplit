@@ -2,12 +2,12 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Free Running Calculators — Pace, Speed, Race Predictions & More",
+  title: "Free Running Calculators Ã¢â‚¬â€ Pace, Speed, Race Predictions & More",
   description:
-    "12 free running calculators — pace, race time predictor, split planner, training zones, VO2max estimator, heart rate zones, calories burned, treadmill converter and more. No signup required. Instant results.",
+    "12 free running calculators Ã¢â‚¬â€ pace, race time predictor, split planner, training zones, VO2max estimator, heart rate zones, calories burned, treadmill converter and more. No signup required. Instant results.",
   alternates: { canonical: "/calculators" },
   openGraph: {
-    title: "Free Running Calculators — RunSplit",
+    title: "Free Running Calculators Ã¢â‚¬â€ RunSplit",
     description: "12 free running calculators for pace, race predictions, training zones, VO2max and more.",
     url: "/calculators",
   },
@@ -18,84 +18,84 @@ const calculators = [
     href: "/calculators/pace",
     title: "Pace Calculator",
     description: "Calculate your running pace, speed, and finish time for any distance.",
-    icon: "⏱️",
+    icon: "Ã¢ÂÂ±Ã¯Â¸Â",
     keywords: "pace, speed, time, distance",
   },
   {
     href: "/calculators/race-predictor",
     title: "Race Time Predictor",
     description: "Predict your finish time at any race distance from a recent result.",
-    icon: "🏁",
+    icon: "Ã°Å¸ÂÂ",
     keywords: "predict, race, marathon, 5K",
   },
   {
     href: "/calculators/splits",
     title: "Split Time Calculator",
     description: "Plan your race splits with even or negative split strategies.",
-    icon: "📊",
+    icon: "Ã°Å¸â€œÅ ",
     keywords: "splits, pacing, race plan",
   },
   {
     href: "/calculators/training-paces",
     title: "Training Paces",
     description: "Get your easy, tempo, interval and repetition training paces.",
-    icon: "🎯",
+    icon: "Ã°Å¸Å½Â¯",
     keywords: "training, zones, easy pace, tempo",
   },
   {
     href: "/calculators/speed-converter",
     title: "Speed / Pace Converter",
     description: "Convert between min/km, min/mile, km/h, mph and m/s.",
-    icon: "🔄",
+    icon: "Ã°Å¸â€â€ž",
     keywords: "convert, min/km, min/mile, speed",
   },
   {
     href: "/calculators/age-grade",
     title: "Age-Graded Calculator",
     description: "Compare your performance across ages and genders.",
-    icon: "📈",
+    icon: "Ã°Å¸â€œË†",
     keywords: "age grade, performance, WMA",
   },
   {
     href: "/calculators/vo2max",
     title: "VO2max Estimator",
     description: "Estimate your VO2max from a race result. See your fitness level.",
-    icon: "🫁",
+    icon: "Ã°Å¸Â«Â",
     keywords: "VO2max, fitness, aerobic",
   },
   {
     href: "/calculators/heart-rate-zones",
     title: "Heart Rate Zones",
     description: "Calculate your 5 HR training zones using the Karvonen method.",
-    icon: "❤️",
+    icon: "Ã¢ÂÂ¤Ã¯Â¸Â",
     keywords: "heart rate, zones, Karvonen",
   },
   {
     href: "/calculators/calories",
     title: "Calories Burned",
     description: "Estimate calories burned running based on weight, distance and pace.",
-    icon: "🔥",
+    icon: "Ã°Å¸â€Â¥",
     keywords: "calories, burn, weight, MET",
   },
   {
     href: "/calculators/treadmill",
     title: "Treadmill Converter",
     description: "Convert treadmill speed and incline to outdoor equivalent pace.",
-    icon: "🏃",
+    icon: "Ã°Å¸ÂÆ’",
     keywords: "treadmill, incline, outdoor",
   },
   {
     href: "/calculators/negative-split",
     title: "Negative Split Planner",
     description: "Plan a negative split strategy for a strong race finish.",
-    icon: "📉",
+    icon: "Ã°Å¸â€œâ€°",
     keywords: "negative split, race strategy",
   },
   {
     href: "/calculators/run-walk",
     title: "Run/Walk Calculator",
     description: "Calculate total time with run/walk intervals. Galloway method.",
-    icon: "🚶‍♂️",
+    icon: "Ã°Å¸Å¡Â¶Ã¢â‚¬ÂÃ¢â„¢â€šÃ¯Â¸Â",
     keywords: "run walk, Galloway, intervals",
   },
 ];
@@ -144,5 +144,9 @@ export default function CalculatorsHub() {
     </div>
   );
 }
+
+
+
+
 
 

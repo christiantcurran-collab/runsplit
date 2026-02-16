@@ -220,7 +220,7 @@ export default function PricingPage() {
               },
               {
                 q: "How does the AI training plan work?",
-                a: "You tell us your goal race, current fitness, and availability. Our AI generates a personalised week-by-week plan with specific workouts and paces tailored to you — you can watch it build in real-time.",
+                a: "You tell us your goal race, current fitness, and availability. Our AI generates a personalised week-by-week plan with specific workouts and paces tailored to you â€” you can watch it build in real-time.",
               },
               {
                 q: "Can I connect Strava?",
@@ -242,3 +242,6 @@ export default function PricingPage() {
     </div>
   );
 }
+
+
+

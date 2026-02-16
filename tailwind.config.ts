@@ -47,9 +47,9 @@ const config: Config = {
         "success-green": "#34D399",
       },
       fontFamily: {
-        mono: ["'IBM Plex Mono'", "monospace"],
-        heading: ["'Sora'", "sans-serif"],
-        body: ["'DM Sans'", "sans-serif"],
+        mono: ["var(--font-mono)", "'IBM Plex Mono'", "monospace"],
+        heading: ["var(--font-heading)", "'Sora'", "sans-serif"],
+        body: ["var(--font-body)", "'DM Sans'", "sans-serif"],
       },
       borderRadius: {
         "2xl": "16px",

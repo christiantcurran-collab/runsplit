@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     getUser();
 
-    // Safety timeout — never spin for more than 8 seconds
+    // Safety timeout â€” never spin for more than 8 seconds
     const timeout = setTimeout(() => {
       if (mounted) setLoading(false);
     }, 8000);
@@ -108,6 +108,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 export const useAuth = () => useContext(AuthContext);
+
+
+
 
 
 

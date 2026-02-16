@@ -47,13 +47,13 @@ export async function GET(request: Request) {
           profile?.subscription_status === "trialing";
 
         if (!isOnboarded) {
-          // Brand new user — needs onboarding first
+          // Brand new user â€” needs onboarding first
           destination = "/onboarding";
         } else if (!isPro) {
-          // Returning user without subscription — send to pricing
+          // Returning user without subscription â€” send to pricing
           destination = "/pricing";
         } else {
-          // Pro user — go to their plan dashboard
+          // Pro user â€” go to their plan dashboard
           destination = "/plan";
         }
       }
@@ -64,3 +64,6 @@ export async function GET(request: Request) {
 
   return NextResponse.redirect(`${siteUrl}/login?error=auth_failed`);
 }
+
+
+

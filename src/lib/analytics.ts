@@ -1,4 +1,4 @@
-// Google Analytics 4 — event helpers
+// Google Analytics 4 â€” event helpers
 // These only fire when NEXT_PUBLIC_GA_MEASUREMENT_ID is set
 
 declare global {
@@ -67,6 +67,7 @@ export const analytics = {
   heroCalculatorUsed: (distance: string) =>
     trackEvent("hero_calculator_used", "Engagement", distance),
 };
+
 
 
 

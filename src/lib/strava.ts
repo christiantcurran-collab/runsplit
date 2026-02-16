@@ -1,7 +1,3 @@
-// ============================================
-// Strava API Integration
-// ============================================
-
 const STRAVA_API_BASE = "https://www.strava.com/api/v3";
 const STRAVA_OAUTH_BASE = "https://www.strava.com/oauth";
 
@@ -13,30 +9,37 @@ export function getStravaClientSecret(): string {
   return process.env.STRAVA_CLIENT_SECRET || "";
 }
 
-export function getStravaRedirectUri(): string {
-  const base = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+export function getStravaRedirectUri(baseUrl?: string): string {
+  const base =
+    baseUrl ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    "http://localhost:3000";
   return `${base}/api/strava/callback`;
 }
 
 /**
  * Build the Strava OAuth authorization URL
  */
-export function getStravaAuthUrl(state?: string): string {
+export function getStravaAuthUrl(state?: string, baseUrl?: string): string {
   const params = new URLSearchParams({
     client_id: getStravaClientId(),
-    redirect_uri: getStravaRedirectUri(),
+    redirect_uri: getStravaRedirectUri(baseUrl),
     response_type: "code",
     approval_prompt: "auto",
     scope: "read,activity:read_all,profile:read_all",
     ...(state ? { state } : {}),
   });
+
   return `${STRAVA_OAUTH_BASE}/authorize?${params.toString()}`;
 }
 
 /**
  * Exchange authorization code for tokens
  */
-export async function exchangeStravaCode(code: string): Promise<{
+export async function exchangeStravaCode(
+  code: string,
+  redirectUri?: string
+): Promise<{
   access_token: string;
   refresh_token: string;
   expires_at: number;
@@ -47,15 +50,20 @@ export async function exchangeStravaCode(code: string): Promise<{
     profile: string;
   };
 }> {
+  const body = new URLSearchParams({
+    client_id: getStravaClientId(),
+    client_secret: getStravaClientSecret(),
+    code,
+    grant_type: "authorization_code",
+    redirect_uri: redirectUri || getStravaRedirectUri(),
+  });
+
   const res = await fetch(`${STRAVA_OAUTH_BASE}/token`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      client_id: getStravaClientId(),
-      client_secret: getStravaClientSecret(),
-      code,
-      grant_type: "authorization_code",
-    }),
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: body.toString(),
   });
 
   if (!res.ok) {
@@ -74,15 +82,19 @@ export async function refreshStravaToken(refreshToken: string): Promise<{
   refresh_token: string;
   expires_at: number;
 }> {
+  const body = new URLSearchParams({
+    client_id: getStravaClientId(),
+    client_secret: getStravaClientSecret(),
+    refresh_token: refreshToken,
+    grant_type: "refresh_token",
+  });
+
   const res = await fetch(`${STRAVA_OAUTH_BASE}/token`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      client_id: getStravaClientId(),
-      client_secret: getStravaClientSecret(),
-      refresh_token: refreshToken,
-      grant_type: "refresh_token",
-    }),
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: body.toString(),
   });
 
   if (!res.ok) {
@@ -100,14 +112,17 @@ export async function getValidStravaToken(
   accessToken: string,
   refreshToken: string,
   expiresAt: number,
-  onRefresh: (newTokens: { access_token: string; refresh_token: string; expires_at: number }) => Promise<void>
+  onRefresh: (newTokens: {
+    access_token: string;
+    refresh_token: string;
+    expires_at: number;
+  }) => Promise<void>
 ): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   if (expiresAt > now + 60) {
     return accessToken;
   }
 
-  // Token expired or expiring soon, refresh
   const newTokens = await refreshStravaToken(refreshToken);
   await onRefresh(newTokens);
   return newTokens.access_token;
@@ -126,9 +141,12 @@ export async function fetchStravaActivities(
   searchParams.set("page", (params?.page || 1).toString());
   searchParams.set("per_page", (params?.per_page || 50).toString());
 
-  const res = await fetch(`${STRAVA_API_BASE}/athlete/activities?${searchParams.toString()}`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  const res = await fetch(
+    `${STRAVA_API_BASE}/athlete/activities?${searchParams.toString()}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  );
 
   if (!res.ok) {
     const err = await res.text();
@@ -141,7 +159,9 @@ export async function fetchStravaActivities(
 /**
  * Fetch athlete profile from Strava
  */
-export async function fetchStravaAthlete(accessToken: string): Promise<StravaApiAthlete> {
+export async function fetchStravaAthlete(
+  accessToken: string
+): Promise<StravaApiAthlete> {
   const res = await fetch(`${STRAVA_API_BASE}/athlete`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
@@ -157,25 +177,24 @@ export async function fetchStravaAthlete(accessToken: string): Promise<StravaApi
  * Deauthorize Strava (revoke access)
  */
 export async function deauthorizeStrava(accessToken: string): Promise<void> {
+  const body = new URLSearchParams({ access_token: accessToken });
   await fetch(`${STRAVA_OAUTH_BASE}/deauthorize`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ access_token: accessToken }),
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: body.toString(),
   });
 }
-
-// ============================================
-// Strava API Types
-// ============================================
 
 export interface StravaApiActivity {
   id: number;
   name: string;
   type: string;
   sport_type: string;
-  distance: number; // meters
-  moving_time: number; // seconds
-  elapsed_time: number; // seconds
+  distance: number;
+  moving_time: number;
+  elapsed_time: number;
   total_elevation_gain: number;
   start_date: string;
   start_date_local: string;
@@ -199,6 +218,3 @@ export interface StravaApiAthlete {
   state: string;
   country: string;
 }
-
-
-

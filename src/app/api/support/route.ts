@@ -9,7 +9,7 @@ const SYSTEM_PROMPT = `You are the RunSplit customer support assistant. RunSplit
 
 Key facts about RunSplit:
 - Free tier: 12 running tools (pace calculator, race predictor, splits planner, training paces, pace converter, age grade, VO2max estimator, heart rate zones, calories, treadmill converter, negative split, run/walk planner) and 5 sample training plans. No signup needed.
-- Pro tier: £4.99/month (or £39.99/year). Includes AI-powered custom training plans, Strava integration & sync, weekly email summaries, race-day strategy, training log with trends, calendar exports, and plan adjustments.
+- Pro tier: Â£4.99/month (or Â£39.99/year). Includes AI-powered custom training plans, Strava integration & sync, weekly email summaries, race-day strategy, training log with trends, calendar exports, and plan adjustments.
 - Users can connect Strava in Settings.
 - Billing is managed through Stripe. Users can cancel anytime from Settings or the Stripe billing portal.
 - Weekly email summaries can be toggled on/off in Settings.
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
         ? aiResponse.content[0].text
         : "Thanks for reaching out! Our team will get back to you soon.";
 
-    // Log the support ticket in Supabase (table may not exist yet — fail gracefully)
+    // Log the support ticket in Supabase (table may not exist yet â€” fail gracefully)
     try {
       const supabase = createServiceSupabase();
       const { error: insertError } = await supabase.from("support_tickets").insert({
@@ -127,7 +127,7 @@ async function sendSupportReply(options: {
           <p style="margin:0;font-size:13px;color:#6E6E7A;line-height:1.5;">If this doesn't fully answer your question, just reply to this email and a human will follow up.</p>
         </td></tr>
         <tr><td style="padding:16px 24px;background:#F8F8FA;border-top:1px solid #E4E4E8;text-align:center;">
-          <p style="margin:0;font-size:11px;color:#A0A0AC;">RunSplit · AI-powered running intelligence · <a href="https://runsplit.co" style="color:#3B82F6;">runsplit.co</a></p>
+          <p style="margin:0;font-size:11px;color:#A0A0AC;">RunSplit Â· AI-powered running intelligence Â· <a href="https://runsplit.co" style="color:#3B82F6;">runsplit.co</a></p>
         </td></tr>
       </table>
     </td></tr>
@@ -190,4 +190,7 @@ async function sendSupportReply(options: {
   console.log(`[Support Email] Configure RESEND_API_KEY or SENDGRID_API_KEY to enable.`);
   return true;
 }
+
+
+
 

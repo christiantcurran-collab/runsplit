@@ -125,13 +125,22 @@ function SettingsContent() {
     setBillingLoading(false);
   };
 
-  const handleConnectStrava = () => {
+  const handleConnectStrava = async () => {
     setStravaLoading(true);
-    const clientId = process.env.NEXT_PUBLIC_STRAVA_CLIENT_ID;
-    const redirectUri = `${window.location.origin}/api/strava/callback`;
-    const scope = "read,activity:read_all,profile:read_all";
-    const authUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&approval_prompt=auto&scope=${scope}`;
-    window.location.href = authUrl;
+    setStravaMessage("");
+    try {
+      const res = await fetch("/api/strava/auth-url");
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        setStravaMessage(data.error || "Failed to start Strava connection.");
+        setStravaLoading(false);
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      setStravaMessage("Failed to start Strava connection.");
+      setStravaLoading(false);
+    }
   };
 
   const handleDisconnectStrava = async () => {
@@ -452,3 +461,6 @@ function SettingsContent() {
     </div>
   );
 }
+
+
+

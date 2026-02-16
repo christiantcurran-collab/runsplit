@@ -122,7 +122,7 @@ export async function POST(request: Request) {
         // For now, we use Supabase's built-in email (or you can swap for Resend/SendGrid)
         const emailSent = await sendEmail({
           to: authUser.user.email,
-          subject: `Your Week in Running — ${Math.round(totalKm * 10) / 10}km logged`,
+          subject: `Your Week in Running â€” ${Math.round(totalKm * 10) / 10}km logged`,
           html: emailHtml,
         });
 
@@ -214,7 +214,7 @@ async function sendEmail(options: { to: string; subject: string; html: string })
     }
   }
 
-  // No email provider configured — log and skip
+  // No email provider configured â€” log and skip
   console.log(`[Email] Would send to ${options.to}: ${options.subject}`);
   console.log(`[Email] Configure RESEND_API_KEY or SENDGRID_API_KEY to enable sending.`);
   return true; // Return true so we still log it
@@ -314,4 +314,8 @@ function buildWeeklyEmailHtml(data: {
 </body>
 </html>`;
 }
+
+
+
+
 

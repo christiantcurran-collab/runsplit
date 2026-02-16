@@ -10,9 +10,9 @@ const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Satur
 
 const PROGRESS_TIPS = [
   "Your plan will include personalised paces based on your recent race time.",
-  "Each workout is designed with a specific purpose — no junk miles.",
+  "Each workout is designed with a specific purpose â€” no junk miles.",
   "Recovery weeks are built in every 3-4 weeks to prevent injury.",
-  "The plan follows the 80/20 rule — 80% easy running, 20% quality work.",
+  "The plan follows the 80/20 rule â€” 80% easy running, 20% quality work.",
   "Your long run will build progressively week over week.",
   "Taper weeks at the end ensure you're fresh on race day.",
 ];
@@ -140,7 +140,7 @@ export default function PlanBuilderPage() {
 
       let buffer = "";
 
-      // Process a single SSE event — returns true if we should stop reading
+      // Process a single SSE event â€” returns true if we should stop reading
       const processEvent = (eventType: string, eventData: string): boolean => {
         try {
           const data = JSON.parse(eventData);
@@ -218,9 +218,9 @@ export default function PlanBuilderPage() {
         }
       }
 
-      // If we get here, stream ended without a complete event — redirect anyway
+      // If we get here, stream ended without a complete event â€” redirect anyway
       // The plan was likely saved; just go to the dashboard
-      console.warn("SSE stream ended without complete event — redirecting to plan dashboard");
+      console.warn("SSE stream ended without complete event â€” redirecting to plan dashboard");
       router.push("/plan");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to generate plan. Please try again.");
@@ -345,7 +345,7 @@ export default function PlanBuilderPage() {
         {justSubscribed && (
           <div className="bg-brand/10 border border-brand/20 rounded-xl p-4 mb-6 text-center">
             <p className="text-brand font-semibold text-sm">
-              Welcome to RunSplit Pro! 🎉 Let&apos;s build your personalised training plan.
+              Welcome to RunSplit Pro! ðŸŽ‰ Let&apos;s build your personalised training plan.
             </p>
           </div>
         )}
@@ -634,3 +634,6 @@ export default function PlanBuilderPage() {
     </div>
   );
 }
+
+
+

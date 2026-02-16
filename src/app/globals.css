@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+/* Fonts are now self-hosted via next/font in layout.tsx for instant loading */
 
 :root {
   /* Surfaces */

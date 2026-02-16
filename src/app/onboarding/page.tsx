@@ -83,10 +83,10 @@ export default function OnboardingPage() {
       freshProfile?.subscription_status === "trialing";
 
     if (isPro) {
-      // Already subscribed — go straight to plan builder
+      // Already subscribed â€” go straight to plan builder
       router.push("/plan/builder?subscribed=true");
     } else {
-      // Not yet subscribed — show pricing
+      // Not yet subscribed â€” show pricing
       router.push("/pricing");
     }
   };
@@ -256,10 +256,13 @@ export default function OnboardingPage() {
 
           <button type="submit" disabled={saving}
             className="w-full bg-brand hover:bg-brand-hover text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50">
-            {saving ? "Saving..." : "Continue →"}
+            {saving ? "Saving..." : "Continue â†’"}
           </button>
         </form>
       </div>
     </div>
   );
 }
+
+
+

@@ -46,11 +46,17 @@ function LoginContent() {
 
       if (data?.session) {
         // Smart routing: check profile to decide where to send user
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("display_name, experience_level, subscription_status")
           .eq("id", data.session.user.id)
-          .single();
+          .maybeSingle();
+
+        // If profile lookup is temporarily unavailable, continue to app and let gates resolve.
+        if (profileError) {
+          window.location.href = redirect;
+          return;
+        }
 
         const isOnboarded = profile?.experience_level || profile?.display_name;
         const isPro = profile?.subscription_status === "active" || profile?.subscription_status === "trialing";
@@ -123,7 +129,7 @@ function LoginContent() {
         </div>
 
         <div className="bg-bg-card rounded-2xl border border-[#E4E4E8] p-8">
-          {/* Google — native GIS button (stays on runsplit.co) */}
+          {/* Google â€” native GIS button (stays on runsplit.co) */}
           <div className="mb-4">
             <GoogleSignInButton
               text="continue_with"
@@ -192,3 +198,6 @@ function LoginContent() {
     </div>
   );
 }
+
+
+

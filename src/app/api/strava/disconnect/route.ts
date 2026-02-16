@@ -5,29 +5,28 @@ import { deauthorizeStrava } from "@/lib/strava";
 export async function POST() {
   try {
     const supabase = createServerSupabase();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    // Get current access token
     const { data: profile } = await supabase
       .from("profiles")
       .select("strava_access_token")
       .eq("id", user.id)
       .single();
 
-    // Revoke Strava access if we have a token
     if (profile?.strava_access_token) {
       try {
         await deauthorizeStrava(profile.strava_access_token);
       } catch {
-        // Continue even if deauth fails — we'll clear our tokens anyway
+        // Continue even if deauth fails; local tokens are still cleared.
       }
     }
 
-    // Clear Strava data from profile
     await supabase
       .from("profiles")
       .update({
@@ -39,11 +38,7 @@ export async function POST() {
       })
       .eq("id", user.id);
 
-    // Delete synced activities
-    await supabase
-      .from("strava_activities")
-      .delete()
-      .eq("user_id", user.id);
+    await supabase.from("strava_activities").delete().eq("user_id", user.id);
 
     return NextResponse.json({ success: true });
   } catch (err) {
@@ -54,6 +49,3 @@ export async function POST() {
     );
   }
 }
-
-
-

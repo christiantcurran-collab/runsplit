@@ -6,7 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 const FAQ_ITEMS = [
   {
     q: "How do I cancel my Pro subscription?",
-    a: "Go to Settings → Manage Subscription. You can cancel instantly through the Stripe billing portal. You'll keep Pro access until the end of your billing period.",
+    a: "Go to Settings â†’ Manage Subscription. You can cancel instantly through the Stripe billing portal. You'll keep Pro access until the end of your billing period.",
   },
   {
     q: "How do I connect Strava?",
@@ -71,7 +71,7 @@ export default function SupportPage() {
             How can we help?
           </h1>
           <p className="text-text-dark-sec text-base sm:text-lg max-w-lg mx-auto">
-            Check the FAQs below or send us a message — our AI assistant will
+            Check the FAQs below or send us a message â€” our AI assistant will
             try to help right away.
           </p>
         </div>
@@ -186,7 +186,7 @@ export default function SupportPage() {
                 }}
                 className="text-sm font-medium text-brand hover:text-brand-hover transition-colors"
               >
-                ← Send another message
+                â† Send another message
               </button>
             </div>
           ) : (
@@ -241,7 +241,7 @@ export default function SupportPage() {
                   rows={5}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Describe your issue or question…"
+                  placeholder="Describe your issue or questionâ€¦"
                   className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-colors resize-none"
                 />
               </div>
@@ -284,7 +284,7 @@ export default function SupportPage() {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                       />
                     </svg>
-                    Thinking…
+                    Thinkingâ€¦
                   </>
                 ) : (
                   "Send Message"
@@ -310,4 +310,7 @@ export default function SupportPage() {
     </div>
   );
 }
+
+
+
 

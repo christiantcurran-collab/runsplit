@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 
 interface SubscriptionGateProps {
@@ -9,13 +10,61 @@ interface SubscriptionGateProps {
 }
 
 export default function SubscriptionGate({ children, fallback }: SubscriptionGateProps) {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, refreshProfile } = useAuth();
+  const [retryingProfile, setRetryingProfile] = useState(false);
+  const [profileRetryAttempted, setProfileRetryAttempted] = useState(false);
 
-  if (loading) {
+  useEffect(() => {
+    let cancelled = false;
+
+    const retryProfileLoad = async () => {
+      if (loading || !user || profile || profileRetryAttempted) return;
+      setRetryingProfile(true);
+      try {
+        await refreshProfile();
+      } finally {
+        if (!cancelled) {
+          setRetryingProfile(false);
+          setProfileRetryAttempted(true);
+        }
+      }
+    };
+
+    void retryProfileLoad();
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, user, profile, profileRetryAttempted, refreshProfile]);
+
+  if (loading || retryingProfile) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center py-12">
         <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin mb-3" />
         <p className="text-sm text-text-muted">Loading your account...</p>
+      </div>
+    );
+  }
+
+  // Avoid incorrectly showing the paywall when profile fetch failed/transiently timed out.
+  if (user && !profile) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center px-4">
+        <div className="max-w-md w-full text-center bg-bg-card border border-[#E4E4E8] rounded-xl p-6">
+          <h2 className="font-heading font-bold text-xl text-text-primary mb-2">
+            We&apos;re still loading your account
+          </h2>
+          <p className="text-sm text-text-secondary mb-5">
+            We couldn&apos;t confirm your subscription yet. This is usually temporary.
+          </p>
+          <button
+            onClick={() => {
+              setProfileRetryAttempted(false);
+            }}
+            className="bg-brand hover:bg-brand-hover text-white font-semibold px-6 py-2.5 rounded-lg transition-colors"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
@@ -35,7 +84,7 @@ export default function SubscriptionGate({ children, fallback }: SubscriptionGat
           {/* Greeting */}
           {displayName && (
             <p className="text-sm text-text-secondary mb-2">
-              Hey {displayName} 👋
+              Hey {displayName} ðŸ‘‹
             </p>
           )}
 
@@ -100,3 +149,6 @@ export default function SubscriptionGate({ children, fallback }: SubscriptionGat
 
   return <>{children}</>;
 }
+
+
+

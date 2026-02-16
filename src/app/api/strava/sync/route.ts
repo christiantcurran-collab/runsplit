@@ -1,20 +1,23 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase-server";
-import { getValidStravaToken, fetchStravaActivities } from "@/lib/strava";
+import { fetchStravaActivities, getValidStravaToken } from "@/lib/strava";
 
 export async function POST() {
   try {
     const supabase = createServerSupabase();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    // Get Strava tokens from profile
     const { data: profile } = await supabase
       .from("profiles")
-      .select("strava_access_token, strava_refresh_token, strava_token_expires_at, strava_athlete_id")
+      .select(
+        "strava_access_token, strava_refresh_token, strava_token_expires_at, strava_athlete_id"
+      )
       .eq("id", user.id)
       .single();
 
@@ -22,7 +25,6 @@ export async function POST() {
       return NextResponse.json({ error: "Strava not connected" }, { status: 400 });
     }
 
-    // Get a valid access token (refresh if needed)
     const accessToken = await getValidStravaToken(
       profile.strava_access_token,
       profile.strava_refresh_token,
@@ -39,29 +41,35 @@ export async function POST() {
       }
     );
 
-    // Fetch last 90 days of running activities
-    const ninetyDaysAgo = Math.floor((Date.now() - 90 * 24 * 60 * 60 * 1000) / 1000);
+    const ninetyDaysAgo = Math.floor(
+      (Date.now() - 90 * 24 * 60 * 60 * 1000) / 1000
+    );
+
     let allActivities: Awaited<ReturnType<typeof fetchStravaActivities>> = [];
     let page = 1;
 
-    while (page <= 5) { // Max 5 pages (250 activities)
+    while (page <= 5) {
       const activities = await fetchStravaActivities(accessToken, {
         after: ninetyDaysAgo,
         page,
         per_page: 50,
       });
+
       if (activities.length === 0) break;
       allActivities = [...allActivities, ...activities];
       if (activities.length < 50) break;
       page++;
     }
 
-    // Filter to running activities only
     const runningActivities = allActivities.filter(
-      (a) => a.type === "Run" || a.type === "TrailRun" || a.type === "VirtualRun" || a.sport_type === "Run" || a.sport_type === "TrailRun"
+      (a) =>
+        a.type === "Run" ||
+        a.type === "TrailRun" ||
+        a.type === "VirtualRun" ||
+        a.sport_type === "Run" ||
+        a.sport_type === "TrailRun"
     );
 
-    // Upsert activities into database
     let synced = 0;
     for (const activity of runningActivities) {
       const { error: upsertError } = await supabase
@@ -100,11 +108,13 @@ export async function POST() {
   } catch (err) {
     console.error("Strava sync error:", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to sync Strava activities" },
+      {
+        error:
+          err instanceof Error
+            ? err.message
+            : "Failed to sync Strava activities",
+      },
       { status: 500 }
     );
   }
 }
-
-
-
