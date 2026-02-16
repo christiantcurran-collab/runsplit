@@ -39,7 +39,9 @@ export default function RaceDayPage() {
     if (!plan?.goal_race_time_seconds) return [];
     const distKm = plan.goal_race_distance_meters / 1000;
     const numSplits = Math.ceil(distKm);
-    return calculateSplits(plan.goal_race_time_seconds, distKm, numSplits, strategy === "negative" ? -2 : strategy === "positive" ? 2 : 0);
+    // Positive gradient = slower start, faster finish (negative split)
+    // Negative gradient = faster start, slower finish (positive split)
+    return calculateSplits(plan.goal_race_time_seconds, distKm, numSplits, strategy === "negative" ? 2 : strategy === "positive" ? -2 : 0);
   }, [plan, strategy]);
 
   const daysUntilRace = useMemo(() => {
