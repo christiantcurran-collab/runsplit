@@ -65,18 +65,54 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Stripe ${plan} price not configured` }, { status: 500 });
     }
 
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      mode: "subscription",
-      payment_method_types: ["card"],
-      line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/plan/builder?subscribed=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/pricing`,
-      subscription_data: {
-        metadata: { supabase_user_id: user.id },
-      },
-      allow_promotion_codes: true,
-    });
+    // Try to create the checkout session
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        mode: "subscription",
+        payment_method_types: ["card"],
+        line_items: [{ price: priceId, quantity: 1 }],
+        success_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/plan/builder?subscribed=true`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/pricing`,
+        subscription_data: {
+          metadata: { supabase_user_id: user.id },
+        },
+        allow_promotion_codes: true,
+      });
+    } catch (checkoutError: any) {
+      // If customer doesn't exist error, create new customer and retry
+      if (checkoutError.message?.includes('No such customer')) {
+        console.log("Checkout: Customer doesn't exist, creating new one");
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: { supabase_user_id: user.id },
+        });
+        customerId = customer.id;
+        console.log("Checkout: Created new Stripe customer:", customerId);
+
+        await supabase
+          .from("profiles")
+          .update({ stripe_customer_id: customerId })
+          .eq("id", user.id);
+
+        // Retry checkout session creation with new customer
+        session = await stripe.checkout.sessions.create({
+          customer: customerId,
+          mode: "subscription",
+          payment_method_types: ["card"],
+          line_items: [{ price: priceId, quantity: 1 }],
+          success_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/plan/builder?subscribed=true`,
+          cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/pricing`,
+          subscription_data: {
+            metadata: { supabase_user_id: user.id },
+          },
+          allow_promotion_codes: true,
+        });
+      } else {
+        throw checkoutError;
+      }
+    }
 
     return NextResponse.json({ url: session.url });
   } catch (err: unknown) {
