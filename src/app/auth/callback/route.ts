@@ -36,9 +36,9 @@ export async function GET(request: Request) {
 
     const { error, data } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && data.user) {
-      // If no redirect in URL, return HTML that checks localStorage client-side
+      // If no redirect in URL, return HTML that checks cookie/localStorage client-side
       if (!redirect) {
-        console.log("Auth callback - No redirect in URL, returning HTML to check localStorage");
+        console.log("Auth callback - No redirect in URL, returning HTML to check cookie/localStorage");
         return new NextResponse(
           `<!DOCTYPE html>
           <html>
@@ -56,11 +56,23 @@ export async function GET(request: Request) {
               <p>Completing sign in...</p>
             </div>
             <script>
-              console.log('Auth callback HTML: Checking localStorage for redirect');
-              const storedRedirect = localStorage.getItem('auth_redirect');
+              console.log('Auth callback HTML: Checking for redirect');
+              
+              // Helper to get cookie value
+              function getCookie(name) {
+                const value = document.cookie.match('(^|;)\\\\s*' + name + '\\\\s*=\\\\s*([^;]+)');
+                return value ? decodeURIComponent(value.pop()) : '';
+              }
+              
+              // Check cookie first (works across subdomains), then localStorage
+              let storedRedirect = getCookie('auth_redirect') || localStorage.getItem('auth_redirect');
               console.log('Auth callback HTML: Stored redirect:', storedRedirect || '(none)');
+              console.log('Auth callback HTML: Cookie value:', getCookie('auth_redirect') || '(none)');
+              console.log('Auth callback HTML: localStorage value:', localStorage.getItem('auth_redirect') || '(none)');
               
               if (storedRedirect) {
+                // Clear both cookie and localStorage
+                document.cookie = 'auth_redirect=; path=/; domain=.runsplit.co; max-age=0';
                 localStorage.removeItem('auth_redirect');
                 console.log('Auth callback HTML: Redirecting to stored path:', storedRedirect);
                 window.location.href = storedRedirect;

@@ -39,7 +39,7 @@ export default function GoogleSignInButton({
     try {
       const siteUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
       
-      // Extract and store the redirect destination in localStorage to survive OAuth flow
+      // Extract the redirect destination
       let redirectDest = "";
       
       if (redirectUrl) {
@@ -54,13 +54,19 @@ export default function GoogleSignInButton({
         }
       }
       
-      // Always store in localStorage (even if empty) to ensure consistency
+      // Store in BOTH cookie and localStorage for maximum compatibility
+      // Cookie works across subdomains (runsplit.co and www.runsplit.co)
+      // localStorage works if on same subdomain
       if (redirectDest) {
+        // Set cookie with domain=.runsplit.co so it works on both www and apex
+        document.cookie = `auth_redirect=${encodeURIComponent(redirectDest)}; path=/; domain=.runsplit.co; max-age=600; SameSite=Lax`;
         localStorage.setItem('auth_redirect', redirectDest);
-        console.log('GoogleSignIn: Stored redirect in localStorage:', redirectDest);
+        console.log('GoogleSignIn: Stored redirect in cookie and localStorage:', redirectDest);
       } else {
+        // Clear both
+        document.cookie = 'auth_redirect=; path=/; domain=.runsplit.co; max-age=0';
         localStorage.removeItem('auth_redirect');
-        console.log('GoogleSignIn: No redirect to store, cleared localStorage');
+        console.log('GoogleSignIn: No redirect to store, cleared cookie and localStorage');
       }
       
       const callbackUrl = `/auth/callback`;
