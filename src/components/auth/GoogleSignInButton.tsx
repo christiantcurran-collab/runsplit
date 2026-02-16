@@ -39,15 +39,28 @@ export default function GoogleSignInButton({
     try {
       const siteUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
       
-      // If we have a custom redirectUrl with a redirect param, store it in localStorage
-      // This ensures it survives the OAuth flow
-      if (redirectUrl && redirectUrl.includes('redirect=')) {
-        const url = new URL(redirectUrl, siteUrl);
-        const redirectParam = url.searchParams.get('redirect');
-        if (redirectParam) {
-          localStorage.setItem('auth_redirect', redirectParam);
-          console.log('GoogleSignIn: Stored redirect in localStorage:', redirectParam);
+      // Extract and store the redirect destination in localStorage to survive OAuth flow
+      let redirectDest = "";
+      
+      if (redirectUrl) {
+        // redirectUrl might be like "/auth/callback?redirect=/start/checkout"
+        // Extract the redirect parameter
+        if (redirectUrl.includes('redirect=')) {
+          const url = new URL(redirectUrl, siteUrl);
+          const redirectParam = url.searchParams.get('redirect');
+          if (redirectParam) {
+            redirectDest = redirectParam;
+          }
         }
+      }
+      
+      // Always store in localStorage (even if empty) to ensure consistency
+      if (redirectDest) {
+        localStorage.setItem('auth_redirect', redirectDest);
+        console.log('GoogleSignIn: Stored redirect in localStorage:', redirectDest);
+      } else {
+        localStorage.removeItem('auth_redirect');
+        console.log('GoogleSignIn: No redirect to store, cleared localStorage');
       }
       
       const callbackUrl = `/auth/callback`;
