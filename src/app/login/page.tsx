@@ -26,6 +26,11 @@ function LoginContent() {
   const supabase = createClient();
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
 
+  // Debug logging
+  console.log('🔷 LOGIN PAGE: Initialized');
+  console.log('  → Redirect param:', redirect);
+  console.log('  → Current URL:', typeof window !== 'undefined' ? window.location.href : 'SSR');
+
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);

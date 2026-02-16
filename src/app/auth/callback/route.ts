@@ -56,7 +56,9 @@ export async function GET(request: Request) {
               <p>Completing sign in...</p>
             </div>
             <script>
-              console.log('Auth callback HTML: Checking for redirect');
+              console.log('🟢 AUTH CALLBACK: Starting redirect check');
+              console.log('  → Current URL:', window.location.href);
+              console.log('  → Current domain:', window.location.hostname);
               
               // Helper to get cookie value
               function getCookie(name) {
@@ -64,21 +66,33 @@ export async function GET(request: Request) {
                 return value ? decodeURIComponent(value.pop()) : '';
               }
               
-              // Check cookie first (works across subdomains), then localStorage
-              let storedRedirect = getCookie('auth_redirect') || localStorage.getItem('auth_redirect');
-              console.log('Auth callback HTML: Stored redirect:', storedRedirect || '(none)');
-              console.log('Auth callback HTML: Cookie value:', getCookie('auth_redirect') || '(none)');
-              console.log('Auth callback HTML: localStorage value:', localStorage.getItem('auth_redirect') || '(none)');
+              // Check all possible storage locations
+              const cookieRedirect = getCookie('auth_redirect');
+              const cookieLocalRedirect = getCookie('auth_redirect_local');
+              const localStorageRedirect = localStorage.getItem('auth_redirect');
+              
+              console.log('🟢 AUTH CALLBACK: Checking all storage:');
+              console.log('  → Cookie (domain .runsplit.co):', cookieRedirect || '(none)');
+              console.log('  → Cookie (local domain):', cookieLocalRedirect || '(none)');
+              console.log('  → localStorage:', localStorageRedirect || '(none)');
+              console.log('  → All cookies:', document.cookie || '(none)');
+              
+              // Use any available redirect
+              let storedRedirect = cookieRedirect || cookieLocalRedirect || localStorageRedirect;
               
               if (storedRedirect) {
-                // Clear both cookie and localStorage
+                // Clear all storage
                 document.cookie = 'auth_redirect=; path=/; domain=.runsplit.co; max-age=0';
+                document.cookie = 'auth_redirect_local=; path=/; max-age=0';
                 localStorage.removeItem('auth_redirect');
-                console.log('Auth callback HTML: Redirecting to stored path:', storedRedirect);
+                
+                console.log('🟢 AUTH CALLBACK: ✅ Found redirect, navigating to:', storedRedirect);
+                console.log('  → Full URL will be:', window.location.origin + storedRedirect);
+                
                 window.location.href = storedRedirect;
               } else {
-                console.log('Auth callback HTML: No stored redirect, checking profile for smart routing');
-                // Fallback to API route with profile check
+                console.log('🟢 AUTH CALLBACK: ❌ No redirect found, using smart routing');
+                console.log('  → Redirecting to /auth/callback/complete for profile check');
                 window.location.href = '/auth/callback/complete';
               }
             </script>
