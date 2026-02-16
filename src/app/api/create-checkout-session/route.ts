@@ -80,9 +80,10 @@ export async function POST(request: Request) {
         },
         allow_promotion_codes: true,
       });
-    } catch (checkoutError: any) {
+    } catch (checkoutError: unknown) {
       // If customer doesn't exist error, create new customer and retry
-      if (checkoutError.message?.includes('No such customer')) {
+      const errorMessage = checkoutError instanceof Error ? checkoutError.message : String(checkoutError);
+      if (errorMessage.includes('No such customer')) {
         console.log("Checkout: Customer doesn't exist, creating new one");
         const customer = await stripe.customers.create({
           email: user.email,
