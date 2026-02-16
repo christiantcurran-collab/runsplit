@@ -30,12 +30,25 @@ export async function POST(request: Request) {
     const stripe = getStripe();
     let customerId = profile?.stripe_customer_id;
 
+    // Verify customer exists in Stripe, or create a new one
+    if (customerId) {
+      try {
+        // Check if the customer still exists in Stripe
+        await stripe.customers.retrieve(customerId);
+        console.log("Checkout: Using existing Stripe customer:", customerId);
+      } catch (err) {
+        console.log("Checkout: Existing customer ID invalid, creating new customer");
+        customerId = null; // Customer doesn't exist, create a new one
+      }
+    }
+
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: user.email,
         metadata: { supabase_user_id: user.id },
       });
       customerId = customer.id;
+      console.log("Checkout: Created new Stripe customer:", customerId);
 
       await supabase
         .from("profiles")
