@@ -177,5 +177,38 @@ export function getSamplePlan(slug: string): SamplePlan | undefined {
   return SAMPLE_PLANS.find((p) => p.slug === slug);
 }
 
+/**
+ * Find the best matching sample plan for a given distance key.
+ * Prefers beginner-level plans for conversions.
+ */
+export function getBestPlanForDistance(distanceKey: string): SamplePlan | undefined {
+  const distanceMap: Record<string, string[]> = {
+    "5k": ["couch-to-5k", "5k-pb-sub25"],
+    "10k": ["beginner-10k"],
+    "halfMarathon": ["half-marathon-intermediate"],
+    "marathon": ["marathon-16-week"],
+  };
+
+  const slugs = distanceMap[distanceKey];
+  if (slugs) {
+    for (const slug of slugs) {
+      const plan = SAMPLE_PLANS.find((p) => p.slug === slug);
+      if (plan) return plan;
+    }
+  }
+
+  // Fallback: find any plan with matching distance
+  const distanceLabels: Record<string, string> = {
+    "5k": "5K", "10k": "10K", "halfMarathon": "Half Marathon", "marathon": "Marathon",
+  };
+  const label = distanceLabels[distanceKey];
+  if (label) {
+    return SAMPLE_PLANS.find((p) => p.distance === label);
+  }
+
+  return SAMPLE_PLANS[0]; // fallback to first plan
+}
+
+
 
 

@@ -19,7 +19,7 @@ import {
 } from "@/lib/running-math";
 import RaceTime from "@/components/ui/RaceTime";
 import PaceBar from "@/components/ui/PaceBar";
-import { SAMPLE_PLANS } from "@/lib/sample-plans";
+import { SAMPLE_PLANS, getBestPlanForDistance } from "@/lib/sample-plans";
 
 const TOOLS = [
   { href: "/tools/pace", title: "Pace & Speed", description: "Distance + time = pace.", icon: "01" },
@@ -296,6 +296,41 @@ export default function HomePage() {
                   ))}
                 </div>
               </div>
+
+              {/* Sample Training Plan Preview */}
+              <SamplePlanPreview distanceKey={selectedDist} />
+
+              {/* Pro CTA — inline */}
+              <div className="mt-6 bg-gradient-to-r from-[#0C0C0F] to-[#1a1a2e] rounded-2xl p-8 text-center relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-brand to-brand-hover" />
+                <p className="font-mono text-[10px] tracking-[3px] uppercase text-brand mb-3">RunSplit Pro</p>
+                <h3 className="font-heading font-bold text-xl sm:text-2xl text-white mb-2">
+                  Want a plan built for <em>you</em>?
+                </h3>
+                <p className="text-gray-400 text-sm max-w-md mx-auto mb-5 leading-relaxed">
+                  The sample plan above is generic. Pro creates a fully personalised {analysis.distName} plan 
+                  based on your fitness, schedule, and goals — powered by AI.
+                </p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <Link
+                    href="/signup"
+                    className="inline-block bg-brand hover:bg-brand-hover text-white font-heading text-sm font-bold px-8 py-3 rounded-lg transition-all hover:-translate-y-0.5"
+                  >
+                    Get my custom plan — £4.99/mo
+                  </Link>
+                  <Link
+                    href={`/plans/${getBestPlanForDistance(selectedDist)?.slug || "couch-to-5k"}`}
+                    className="text-sm text-gray-400 hover:text-white transition-colors"
+                  >
+                    or view the full free plan →
+                  </Link>
+                </div>
+                <div className="flex items-center justify-center gap-4 mt-4 text-[11px] text-gray-500">
+                  <span>✓ Personalised paces</span>
+                  <span>✓ Weekly adjustments</span>
+                  <span>✓ Strava sync</span>
+                </div>
+              </div>
             </div>
           </motion.section>
         )}
@@ -456,6 +491,77 @@ export default function HomePage() {
           </p>
         </div>
       </section>
+    </div>
+  );
+}
+
+/* ─── Sample Plan Preview Component ─── */
+function SamplePlanPreview({ distanceKey }: { distanceKey: string }) {
+  const plan = getBestPlanForDistance(distanceKey);
+  if (!plan) return null;
+
+  // Show first 4 weeks as a preview
+  const previewWeeks = plan.schedule.slice(0, 4);
+
+  return (
+    <div className="mt-5 bg-bg-card border border-[#E4E4E8] rounded-xl overflow-hidden">
+      <div className="px-6 py-4 border-b border-[#E4E4E8] flex items-center justify-between">
+        <div>
+          <div className="font-mono text-[10px] uppercase tracking-[2px] text-text-muted mb-1">
+            Sample Training Plan
+          </div>
+          <h3 className="font-heading font-bold text-base text-text-primary">
+            {plan.title}
+          </h3>
+          <p className="text-xs text-text-secondary mt-0.5">
+            {plan.weeks} weeks · {plan.daysPerWeek}× per week · Peak {plan.peakWeeklyKm}km/wk
+          </p>
+        </div>
+        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-brand/10 text-brand">
+          FREE
+        </span>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="bg-bg-page">
+              <th className="text-left px-4 py-2.5 font-mono text-[10px] uppercase tracking-[1.5px] text-text-muted w-20">Week</th>
+              <th className="text-left px-4 py-2.5 font-mono text-[10px] uppercase tracking-[1.5px] text-text-muted w-24">Phase</th>
+              <th className="text-center px-4 py-2.5 font-mono text-[10px] uppercase tracking-[1.5px] text-text-muted w-16">Km</th>
+              <th className="text-left px-4 py-2.5 font-mono text-[10px] uppercase tracking-[1.5px] text-text-muted">Key Sessions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {previewWeeks.map((week) => {
+              const keySessions = week.days
+                .filter((d) => d && d !== "" && d !== "Rest")
+                .slice(0, 3)
+                .join(" · ");
+              return (
+                <tr key={week.week} className="border-t border-[#E4E4E8]/50 hover:bg-bg-page/50 transition-colors">
+                  <td className="px-4 py-3 font-mono font-bold text-text-primary">{week.week}</td>
+                  <td className="px-4 py-3 text-text-secondary">{week.phase}</td>
+                  <td className="px-4 py-3 text-center font-mono font-semibold text-text-primary">{week.totalKm}</td>
+                  <td className="px-4 py-3 text-text-secondary truncate max-w-[300px]">{keySessions}</td>
+                </tr>
+              );
+            })}
+            {plan.schedule.length > 4 && (
+              <tr className="border-t border-[#E4E4E8]/50">
+                <td colSpan={4} className="px-4 py-3 text-center">
+                  <Link
+                    href={`/plans/${plan.slug}`}
+                    className="text-sm text-brand hover:text-brand-hover font-medium transition-colors"
+                  >
+                    View all {plan.weeks} weeks →
+                  </Link>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
