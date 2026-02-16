@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 export const metadata: Metadata = {
-  title: "Negative Split Calculator â€” Race Pacing Strategy",
+  title: "Negative Split Calculator — Race Pacing Strategy",
   description: "Plan a negative split race strategy with detailed split tables. Run the second half faster for a stronger finish. Free negative split calculator for any distance.",
   alternates: { canonical: "/tools/negative-split" },
 };

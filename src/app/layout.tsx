@@ -32,7 +32,7 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://runsplit.co";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "RunSplit Ã¢â‚¬â€ AI Running Coach & Free Training Tools",
+    default: "RunSplit — AI Running Coach & Free Training Tools",
     template: "%s | RunSplit",
   },
   description:
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "RunSplit Ã¢â‚¬â€ AI Running Coach & Free Training Tools",
+    title: "RunSplit — AI Running Coach & Free Training Tools",
     description:
       "Free running pace calculator, race predictor, and 12 more tools. Upgrade for AI-powered personalised training plans and Strava integration.",
     url: siteUrl,
@@ -80,13 +80,13 @@ export const metadata: Metadata = {
         url: "/images/runner-male.webp",
         width: 800,
         height: 1000,
-        alt: "Runner training in the city Ã¢â‚¬â€ RunSplit AI Running Coach",
+        alt: "Runner training in the city — RunSplit AI Running Coach",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "RunSplit Ã¢â‚¬â€ AI Running Coach & Free Training Tools",
+    title: "RunSplit — AI Running Coach & Free Training Tools",
     description:
       "Free running pace calculator, race predictor, and 12 more tools. Upgrade for AI-powered personalised training plans.",
     images: ["/images/runner-male.webp"],

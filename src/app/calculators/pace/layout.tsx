@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Running Pace Calculator â€” Calculate Race Pace & Speed",
+  title: "Running Pace Calculator — Calculate Race Pace & Speed",
   description: "Free running pace calculator. Calculate your pace per km/mile, speed, and finish time for any distance. Instant results for 5K, 10K, half marathon, marathon and custom distances.",
   alternates: { canonical: "/calculators/pace" },
 };

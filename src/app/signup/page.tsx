@@ -63,11 +63,11 @@ export default function SignupPage() {
             </span>
           </Link>
           <h1 className="font-heading font-bold text-3xl text-text-primary mb-2">Create your account</h1>
-          <p className="text-text-secondary">Get started with RunSplit Pro â€” &pound;4.99/month</p>
+          <p className="text-text-secondary">Get started with RunSplit Pro — &pound;4.99/month</p>
         </div>
 
         <div className="bg-bg-card rounded-2xl border border-[#E4E4E8] p-8">
-          {/* Google â€” native GIS button (stays on runsplit.co) */}
+          {/* Google — native GIS button (stays on runsplit.co) */}
           <div className="mb-4">
             <GoogleSignInButton
               text="signup_with"
@@ -119,7 +119,7 @@ export default function SignupPage() {
           </form>
 
           <p className="text-xs text-text-muted text-center mt-4">
-            Cancel anytime. No free trial â€” just results.
+            Cancel anytime. No free trial — just results.
           </p>
         </div>
 

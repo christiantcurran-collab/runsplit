@@ -1,6 +1,14 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  type ReactNode,
+} from "react";
 import { createClient } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import type { Profile } from "@/types";
@@ -25,66 +33,89 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const supabase = createClient();
+  const supabaseRef = useRef(createClient());
+  const profileFetchRef = useRef<string | null>(null);
 
   const fetchProfile = useCallback(async (userId: string) => {
+    // Deduplicate: skip if we already fetched for this user
+    if (profileFetchRef.current === userId) return;
+    profileFetchRef.current = userId;
+
     try {
-      const { data } = await supabase
+      const { data, error } = await supabaseRef.current
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .single();
-      setProfile(data);
+
+      if (error) {
+        console.warn("Profile fetch error:", error.message);
+        setProfile(null);
+      } else {
+        setProfile(data);
+      }
     } catch (err) {
-      console.error("Failed to fetch profile:", err);
+      console.error("Profile fetch exception:", err);
       setProfile(null);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const refreshProfile = useCallback(async () => {
-    if (user) await fetchProfile(user.id);
+    if (user) {
+      profileFetchRef.current = null; // Force re-fetch
+      await fetchProfile(user.id);
+    }
   }, [user, fetchProfile]);
 
   useEffect(() => {
     let mounted = true;
+    const supabase = supabaseRef.current;
 
-    const getUser = async () => {
-      try {
-        const {
-          data: { user: authUser },
-        } = await supabase.auth.getUser();
-        if (!mounted) return;
-        setUser(authUser);
-        if (authUser) await fetchProfile(authUser.id);
-      } catch (err) {
-        console.error("Auth getUser error:", err);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    getUser();
-
-    // Safety timeout â€” never spin for more than 8 seconds
-    const timeout = setTimeout(() => {
-      if (mounted) setLoading(false);
-    }, 8000);
-
+    // ---------------------------------------------------------------
+    // SINGLE SOURCE OF TRUTH: onAuthStateChange
+    //
+    // This fires immediately with INITIAL_SESSION (from cookies/localStorage),
+    // and on every subsequent auth event (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED).
+    //
+    // We do NOT call supabase.auth.getUser() here — that makes a server
+    // roundtrip that can fail and cause a flash-then-logout race condition.
+    // The middleware already handles server-side token refresh.
+    // ---------------------------------------------------------------
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
+
       const currentUser = session?.user ?? null;
+
+      if (event === "SIGNED_OUT") {
+        setUser(null);
+        setProfile(null);
+        profileFetchRef.current = null;
+        setLoading(false);
+        return;
+      }
+
       setUser(currentUser);
+
       if (currentUser) {
         await fetchProfile(currentUser.id);
       } else {
         setProfile(null);
+        profileFetchRef.current = null;
       }
+
       setLoading(false);
     });
+
+    // Safety timeout: if onAuthStateChange never fires (very rare),
+    // stop the loading spinner after 5 seconds
+    const timeout = setTimeout(() => {
+      if (mounted && loading) {
+        console.warn("Auth: safety timeout reached, stopping spinner");
+        setLoading(false);
+      }
+    }, 5000);
 
     return () => {
       mounted = false;
@@ -94,24 +125,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
+  const signOut = useCallback(async () => {
+    await supabaseRef.current.auth.signOut();
     setUser(null);
     setProfile(null);
-  };
+    profileFetchRef.current = null;
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile }}>
+    <AuthContext.Provider
+      value={{ user, profile, loading, signOut, refreshProfile }}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
 
 export const useAuth = () => useContext(AuthContext);
-
-
-
-
-
-
-

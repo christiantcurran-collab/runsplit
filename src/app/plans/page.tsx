@@ -3,12 +3,12 @@ import type { Metadata } from "next";
 import { SAMPLE_PLANS } from "@/lib/sample-plans";
 
 export const metadata: Metadata = {
-  title: "Free Training Plans Ã¢â‚¬â€ 5K, 10K, Half Marathon & Marathon",
+  title: "Free Training Plans — 5K, 10K, Half Marathon & Marathon",
   description:
     "Browse 5 free training plans for Couch to 5K, beginner 10K, intermediate half marathon, intermediate marathon, and sub-25 5K. Want a plan customised to you? Upgrade to RunSplit Pro.",
   alternates: { canonical: "/plans" },
   openGraph: {
-    title: "Free Running Training Plans Ã¢â‚¬â€ RunSplit",
+    title: "Free Running Training Plans — RunSplit",
     description: "Free training plans for 5K, 10K, half marathon and marathon. From beginner to advanced.",
     url: "/plans",
   },
@@ -54,7 +54,7 @@ export default function PlansPage() {
                   <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${LEVEL_COLORS[plan.level]}`}>
                     {plan.level}
                   </span>
-                  <span className="text-[11px] text-text-muted">{plan.weeks} weeks Ã‚Â· {plan.daysPerWeek}Ãƒâ€”/week</span>
+                  <span className="text-[11px] text-text-muted">{plan.weeks} weeks Â· {plan.daysPerWeek}Ã—/week</span>
                 </div>
                 <h2 className="font-heading font-bold text-lg text-text-primary group-hover:text-brand transition-colors mb-1">
                   {plan.title}
@@ -77,13 +77,13 @@ export default function PlansPage() {
               Need a plan built for <em>you</em>?
             </h2>
             <p className="text-text-dark-sec max-w-lg mx-auto mb-6">
-              These sample plans are a great starting point Ã¢â‚¬â€ but they&apos;re not personalised. With RunSplit Pro, our AI builds a plan around your current fitness, available training days, race goal, and schedule.
+              These sample plans are a great starting point — but they&apos;re not personalised. With RunSplit Pro, our AI builds a plan around your current fitness, available training days, race goal, and schedule.
             </p>
             <Link
               href="/signup"
               className="inline-block bg-brand hover:bg-brand-hover text-white font-heading font-bold px-8 py-3.5 rounded-[10px] transition-all hover:-translate-y-0.5"
             >
-              Get a Custom Plan Ã¢â‚¬â€ Ã‚Â£4.99/mo
+              Get a Custom Plan — £4.99/mo
             </Link>
           </div>
         </div>

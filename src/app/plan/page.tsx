@@ -54,14 +54,14 @@ function weatherLabel(code: number): string {
 }
 
 function weatherEmoji(code: number): string {
-  if (code === 0) return "â˜€ï¸";
-  if ([1, 2, 3].includes(code)) return "â›…";
-  if ([45, 48].includes(code)) return "ðŸŒ«ï¸";
-  if ([51, 53, 55, 56, 57].includes(code)) return "ðŸŒ¦ï¸";
-  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return "ðŸŒ§ï¸";
-  if ([71, 73, 75, 77, 85, 86].includes(code)) return "â„ï¸";
-  if ([95, 96, 99].includes(code)) return "â›ˆï¸";
-  return "ðŸŒ¤ï¸";
+  if (code === 0) return "\u2600\uFE0F";
+  if ([1, 2, 3].includes(code)) return "\u26C5";
+  if ([45, 48].includes(code)) return "\uD83C\uDF2B\uFE0F";
+  if ([51, 53, 55, 56, 57].includes(code)) return "\uD83C\uDF26\uFE0F";
+  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return "\uD83C\uDF27\uFE0F";
+  if ([71, 73, 75, 77, 85, 86].includes(code)) return "\u2744\uFE0F";
+  if ([95, 96, 99].includes(code)) return "\u26C8\uFE0F";
+  return "\uD83C\uDF24\uFE0F";
 }
 
 export default function PlanDashboard() {
@@ -534,7 +534,7 @@ export default function PlanDashboard() {
                     </div>
                     {forecast && (
                       <div className="text-[11px] text-gray-500 mb-2">
-                        {weatherEmoji(forecast.code)} {forecast.tempMax}Â°/{forecast.tempMin}Â°{" "}
+                        {weatherEmoji(forecast.code)} {forecast.tempMax}°/{forecast.tempMin}°{" "}
                         <span className="text-gray-400">({weatherLabel(forecast.code)})</span>
                       </div>
                     )}
@@ -563,19 +563,19 @@ export default function PlanDashboard() {
         {/* Quick actions */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Link href="/plan/calendar" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-brand-orange transition-colors text-center">
-            <div className="text-2xl mb-1">ðŸ“…</div>
+            <div className="text-2xl mb-1">📅</div>
             <div className="text-sm font-semibold">Full Calendar</div>
           </Link>
           <Link href="/plan/race-day" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-brand-orange transition-colors text-center">
-            <div className="text-2xl mb-1">ðŸ</div>
+            <div className="text-2xl mb-1">🏁</div>
             <div className="text-sm font-semibold">Race Day Plan</div>
           </Link>
           <Link href="/plan/log" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-brand-orange transition-colors text-center">
-            <div className="text-2xl mb-1">ðŸ“Š</div>
+            <div className="text-2xl mb-1">📊</div>
             <div className="text-sm font-semibold">Training Log</div>
           </Link>
           <Link href="/settings" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-brand-orange transition-colors text-center">
-            <div className="text-2xl mb-1">ðŸ”—</div>
+            <div className="text-2xl mb-1">🔗</div>
             <div className="text-sm font-semibold">Connect Strava</div>
           </Link>
         </div>

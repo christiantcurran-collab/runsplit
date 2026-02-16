@@ -1,35 +1,12 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Pages that require auth session refresh
-const AUTH_PATHS = new Set([
-  "/plan",
-  "/settings",
-  "/onboarding",
-  "/pricing",
-]);
-
-function needsAuthRefresh(pathname: string): boolean {
-  // Only refresh session on auth-sensitive pages, not on static/public pages
-  if (AUTH_PATHS.has(pathname)) return true;
-  if (pathname.startsWith("/plan/")) return true;
-  return false;
-}
-
 export async function middleware(request: NextRequest) {
   // Only run if Supabase is configured
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   ) {
-    return NextResponse.next();
-  }
-
-  const { pathname } = request.nextUrl;
-
-  // Skip auth refresh for public pages (/, /tools/*, /calculators/*, /plans/*, /start/*)
-  // This eliminates the Supabase roundtrip for most page loads
-  if (!needsAuthRefresh(pathname) && pathname !== "/login" && pathname !== "/signup") {
     return NextResponse.next();
   }
 
@@ -63,7 +40,10 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh the session (important for keeping cookies alive)
+  // IMPORTANT: getUser() refreshes the auth token in cookies.
+  // This must run so that the client-side onAuthStateChange picks up
+  // a valid session. Without this, expired tokens won't get refreshed
+  // and the user will appear logged out.
   await supabase.auth.getUser();
 
   return response;

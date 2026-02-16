@@ -1,4 +1,4 @@
-// Google Analytics 4 â€” event helpers
+// Google Analytics 4 — event helpers
 // These only fire when NEXT_PUBLIC_GA_MEASUREMENT_ID is set
 
 declare global {

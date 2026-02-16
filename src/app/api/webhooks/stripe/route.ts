@@ -131,7 +131,7 @@ export async function POST(request: Request) {
         const invoice = event.data.object as Stripe.Invoice;
         const customerId = invoice.customer as string;
 
-        // Don't immediately cancel â€” just log. Stripe will retry.
+        // Don't immediately cancel — just log. Stripe will retry.
         console.warn(`Payment failed for customer ${customerId}, invoice ${invoice.id}`);
 
         // After all retries fail, Stripe will fire customer.subscription.deleted

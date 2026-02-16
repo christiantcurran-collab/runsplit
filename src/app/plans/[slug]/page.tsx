@@ -15,11 +15,11 @@ export function generateMetadata({ params }: Props): Metadata {
   const plan = getSamplePlan(params.slug);
   if (!plan) return { title: "Plan Not Found" };
   return {
-    title: `${plan.title} â€” Free Training Plan`,
+    title: `${plan.title} — Free Training Plan`,
     description: `${plan.description} ${plan.weeks}-week plan, ${plan.daysPerWeek} days per week. Free to view, no signup required.`,
     alternates: { canonical: `/plans/${params.slug}` },
     openGraph: {
-      title: `${plan.title} â€” Free Training Plan | RunSplit`,
+      title: `${plan.title} — Free Training Plan | RunSplit`,
       description: plan.description,
       url: `/plans/${params.slug}`,
     },
@@ -54,7 +54,7 @@ export default function SamplePlanPage({ params }: Props) {
             <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${LEVEL_COLORS[plan.level]}`}>
               {plan.level}
             </span>
-            <span className="text-sm text-text-dark-sec">{plan.distance} Â· {plan.weeks} weeks Â· {plan.daysPerWeek}Ã—/week Â· Peak {plan.peakWeeklyKm}km/week</span>
+            <span className="text-sm text-text-dark-sec">{plan.distance} · {plan.weeks} weeks · {plan.daysPerWeek}×/week · Peak {plan.peakWeeklyKm}km/week</span>
           </div>
           <h1 className="font-heading font-extrabold text-3xl sm:text-4xl tracking-tight mb-2">
             {plan.title}
@@ -79,7 +79,7 @@ export default function SamplePlanPage({ params }: Props) {
               <div className="px-6 py-4 bg-bg-subtle border-b border-[#E4E4E8] flex items-center justify-between">
                 <div>
                   <span className="font-heading font-bold text-sm text-text-primary">Week {week.week}</span>
-                  <span className="text-xs text-text-muted ml-2">â€” {week.phase}</span>
+                  <span className="text-xs text-text-muted ml-2">— {week.phase}</span>
                 </div>
                 <span className="text-xs font-mono font-semibold text-text-secondary">{week.totalKm}km</span>
               </div>
@@ -88,7 +88,7 @@ export default function SamplePlanPage({ params }: Props) {
                   <div key={i} className="p-3 min-h-[4.5rem]">
                     <div className="font-mono text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">{WEEKDAYS[i]}</div>
                     {day ? (
-                      <div className={`text-xs leading-relaxed ${day.startsWith("ðŸ") ? "font-bold text-brand" : "text-text-secondary"}`}>
+                      <div className={`text-xs leading-relaxed ${day.startsWith("🏁") ? "font-bold text-brand" : "text-text-secondary"}`}>
                         {day}
                       </div>
                     ) : (
@@ -108,13 +108,13 @@ export default function SamplePlanPage({ params }: Props) {
           </h3>
           <p className="text-text-dark-sec mb-6 max-w-md mx-auto">
             Our AI takes your current fitness, training days, pace, and goals to create a
-            plan that&apos;s built specifically for you â€” not a generic template.
+            plan that&apos;s built specifically for you — not a generic template.
           </p>
           <Link
             href="/signup"
             className="inline-block bg-brand hover:bg-brand-hover text-white font-heading font-bold px-8 py-3.5 rounded-[10px] transition-all hover:-translate-y-0.5"
           >
-            Get a Custom Plan â€” Â£4.99/mo
+            Get a Custom Plan — £4.99/mo
           </Link>
         </div>
 
@@ -129,7 +129,7 @@ export default function SamplePlanPage({ params }: Props) {
                 className="group bg-bg-card rounded-xl border border-[#E4E4E8] p-4 hover:border-brand/40 hover:shadow-md transition-all"
               >
                 <div className="font-heading font-semibold text-sm text-text-primary group-hover:text-brand transition-colors">{p.title}</div>
-                <div className="text-xs text-text-muted mt-1">{p.weeks} weeks Â· {p.level}</div>
+                <div className="text-xs text-text-muted mt-1">{p.weeks} weeks · {p.level}</div>
               </Link>
             ))}
           </div>

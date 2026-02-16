@@ -84,7 +84,7 @@ export default function SubscriptionGate({ children, fallback }: SubscriptionGat
           {/* Greeting */}
           {displayName && (
             <p className="text-sm text-text-secondary mb-2">
-              Hey {displayName} ðŸ‘‹
+              Hey {displayName} 👋
             </p>
           )}
 

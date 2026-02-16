@@ -15,7 +15,7 @@ CRITICAL PLANNING RULES:
 2. PROGRESSIVE BUILD:
    - Increase weekly volume by at most 10% per week.
    - Every 3-4 weeks, include a recovery week (reduce volume 20-30%).
-   - The plan must be REALISTIC â€” not everyone can peak at 80km/week. Scale peak volume to the runner's days/week and starting fitness.
+   - The plan must be REALISTIC — not everyone can peak at 80km/week. Scale peak volume to the runner's days/week and starting fitness.
 
 3. RESPECT THE RUNNER'S SCHEDULE:
    - If the runner can only run 1-2 days per week, design around that. DO NOT add extra running days.
@@ -122,7 +122,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Server-side subscription check â€” only Pro users can generate plans
+    // Server-side subscription check — only Pro users can generate plans
     const supabaseCheck = createServiceSupabase();
     const { data: userProfile } = await supabaseCheck
       .from("profiles")
@@ -186,18 +186,18 @@ export async function POST(request: Request) {
 
 GOAL:
 - Race: ${raceDistName} (${raceDistKm.toFixed(1)}km)
-- Goal type: ${goal.goalType === "finish" ? "Just finish â€” priority is completing the distance safely" : goal.goalType === "target_time" ? `Target time: ${formatTimeFromSeconds(goal.targetTimeSeconds || 0)}` : "Beat personal record"}
+- Goal type: ${goal.goalType === "finish" ? "Just finish — priority is completing the distance safely" : goal.goalType === "target_time" ? `Target time: ${formatTimeFromSeconds(goal.targetTimeSeconds || 0)}` : "Beat personal record"}
 - Race date: ${goal.raceDate}
 ${goal.raceName ? `- Race name: ${goal.raceName}` : ""}
 
-CURRENT FITNESS (THIS IS CRITICAL â€” START THE PLAN HERE):
-- Current weekly volume: ${fitness.currentWeeklyKm}km per week â€” Week 1 must start at approximately this volume
-- Longest recent run: ${fitness.longestRecentRunKm}km â€” the first long run should be near this distance
+CURRENT FITNESS (THIS IS CRITICAL — START THE PLAN HERE):
+- Current weekly volume: ${fitness.currentWeeklyKm}km per week — Week 1 must start at approximately this volume
+- Longest recent run: ${fitness.longestRecentRunKm}km — the first long run should be near this distance
 - Recent race: ${DISTANCES[fitness.recentRaceDistance as DistanceKey]?.name || fitness.recentRaceDistance} in ${formatTimeFromSeconds(fitness.recentRaceTimeSeconds)}
 - Estimated VO2max: ${vo2max.toFixed(1)} ml/kg/min
 
 SCHEDULE:
-- Running days per week: ${fitness.trainingDaysPerWeek} (STRICT â€” never exceed this number of running days)
+- Running days per week: ${fitness.trainingDaysPerWeek} (STRICT — never exceed this number of running days)
 ${scheduleGuidance}
 
 TRAINING PACES (seconds per km):
@@ -208,12 +208,12 @@ TRAINING PACES (seconds per km):
 - Repetition: ${trainingPaces.repetition.min}-${trainingPaces.repetition.max} sec/km
 
 PREFERENCES:
-- Cross-training: ${preferences.includeCrossTraining ? "Yes, include cross-training sessions on non-running days" : "No cross-training â€” use rest days"}
+- Cross-training: ${preferences.includeCrossTraining ? "Yes, include cross-training sessions on non-running days" : "No cross-training — use rest days"}
 - Strength work: ${preferences.includeStrength ? "Yes, include strength sessions" : "No strength sessions"}
 - Cannot run on: ${preferences.restDays.length > 0 ? preferences.restDays.map((d) => WEEKDAYS[d]).join(", ") : "No restrictions"}
 ${preferences.injuryConcerns ? `- Injury concerns: ${preferences.injuryConcerns}` : ""}
 
-${isCompressed ? `WARNING: This runner ideally needs ${minRecommendedWeeks}+ weeks but only has ${planWeeks} weeks. Be conservative â€” don't build too aggressively. Prioritise safety. The runner may need walk/run intervals early on.` : ""}
+${isCompressed ? `WARNING: This runner ideally needs ${minRecommendedWeeks}+ weeks but only has ${planWeeks} weeks. Be conservative — don't build too aggressively. Prioritise safety. The runner may need walk/run intervals early on.` : ""}
 
 CONSTRAINTS:
 - Week 1 total km MUST be approximately ${fitness.currentWeeklyKm}km (the runner's current weekly volume)
@@ -282,13 +282,13 @@ Generate the complete ${planWeeks}-week plan as JSON. VERIFY that each week has 
 
                 let phaseMsg = `Building week ${weeksDetected} of ${planWeeks}...`;
                 if (weeksDetected <= 2) {
-                  phaseMsg = `Setting up your base phase â€” Week ${weeksDetected}...`;
+                  phaseMsg = `Setting up your base phase — Week ${weeksDetected}...`;
                 } else if (weeksDetected >= planWeeks - 2) {
                   phaseMsg = `Creating your taper and race week...`;
                 } else if (weeksDetected >= Math.floor(planWeeks * 0.6)) {
-                  phaseMsg = `Building peak training â€” Week ${weeksDetected}...`;
+                  phaseMsg = `Building peak training — Week ${weeksDetected}...`;
                 } else {
-                  phaseMsg = `Designing progressive build â€” Week ${weeksDetected}...`;
+                  phaseMsg = `Designing progressive build — Week ${weeksDetected}...`;
                 }
 
                 sendEvent("progress", {
@@ -341,7 +341,7 @@ Generate the complete ${planWeeks}-week plan as JSON. VERIFY that each week has 
           const supabase = createServiceSupabase();
 
           const planName = goal.raceName
-            ? `${raceDistName} Plan â€” ${goal.raceName}`
+            ? `${raceDistName} Plan — ${goal.raceName}`
             : `${raceDistName} Training Plan`;
 
           const planStartDate = new Date();

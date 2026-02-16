@@ -129,7 +129,7 @@ function LoginContent() {
         </div>
 
         <div className="bg-bg-card rounded-2xl border border-[#E4E4E8] p-8">
-          {/* Google â€” native GIS button (stays on runsplit.co) */}
+          {/* Google — native GIS button (stays on runsplit.co) */}
           <div className="mb-4">
             <GoogleSignInButton
               text="continue_with"

@@ -26,7 +26,7 @@ const TOOLS = [
   { href: "/tools/predict", title: "What Can I Run?", description: "Predict any race time.", icon: "02" },
   { href: "/tools/splits", title: "Race Split Planner", description: "Even or negative splits.", icon: "03" },
   { href: "/tools/training-paces", title: "Training Paces", description: "5-zone training paces.", icon: "04" },
-  { href: "/tools/convert", title: "Pace Converter", description: "km â†” mile â†” km/h.", icon: "05" },
+  { href: "/tools/convert", title: "Pace Converter", description: "km ↔ mile ↔ km/h.", icon: "05" },
   { href: "/tools/age-grade", title: "Performance Grade", description: "Age-graded rating.", icon: "06" },
   { href: "/tools/vo2max", title: "VO2max Estimator", description: "Fitness from race data.", icon: "07" },
   { href: "/tools/heart-rate", title: "Heart Rate Zones", description: "Karvonen 5-zone.", icon: "08" },
@@ -89,7 +89,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* â”€â”€â”€ HERO â€” full dark â”€â”€â”€ */}
+      {/* ─── HERO — full dark ─── */}
       <section className="bg-bg-dark text-text-on-dark min-h-[100vh] flex flex-col items-center justify-center text-center relative overflow-hidden">
         {/* Gradient underlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg-dark pointer-events-none" />
@@ -127,7 +127,7 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.6 }}
           >
-            Connect your watch. Set your goal. Get AI-powered pacing, plans, and coaching â€” built on your actual running data.
+            Connect your watch. Set your goal. Get AI-powered pacing, plans, and coaching — built on your actual running data.
           </motion.p>
 
           {/* Smart Input */}
@@ -189,7 +189,7 @@ export default function HomePage() {
               disabled={totalSec <= 0}
               className="w-full mt-5 bg-brand hover:bg-brand-hover text-white font-heading text-sm font-bold py-[13px] rounded-lg transition-all disabled:opacity-40"
             >
-              Show me what I need â†’
+              Show me what I need →
             </button>
           </motion.div>
 
@@ -201,13 +201,13 @@ export default function HomePage() {
           >
             or{" "}
             <Link href="/signup" className="text-brand hover:text-brand-hover transition-colors">
-              connect Strava to start from your real data â†’
+              connect Strava to start from your real data →
             </Link>
           </motion.p>
         </div>
       </section>
 
-      {/* â”€â”€â”€ RESULTS (light contrast) â”€â”€â”€ */}
+      {/* ─── RESULTS (light contrast) ─── */}
       <div ref={resultsRef} />
       <AnimatePresence>
         {showResults && analysis && (
@@ -222,7 +222,7 @@ export default function HomePage() {
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-2 h-2 rounded-full bg-brand animate-pulse" />
                 <span className="font-heading text-[13px] font-semibold uppercase tracking-[1.5px] text-text-secondary">
-                  Live Analysis â€” {analysis.distName} at {formatTimeFromSeconds(totalSec)}
+                  Live Analysis — {analysis.distName} at {formatTimeFromSeconds(totalSec)}
                 </span>
               </div>
 
@@ -300,7 +300,7 @@ export default function HomePage() {
               {/* Sample Training Plan Preview */}
               <SamplePlanPreview distanceKey={selectedDist} />
 
-              {/* Pro CTA â€” inline */}
+              {/* Pro CTA — inline */}
               <div className="mt-6 bg-gradient-to-r from-[#0C0C0F] to-[#1a1a2e] rounded-2xl p-8 text-center relative overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-brand to-brand-hover" />
                 <p className="font-mono text-[10px] tracking-[3px] uppercase text-brand mb-3">RunSplit Pro</p>
@@ -309,26 +309,26 @@ export default function HomePage() {
                 </h3>
                 <p className="text-gray-400 text-sm max-w-md mx-auto mb-5 leading-relaxed">
                   The sample plan above is generic. Pro creates a fully personalised {analysis.distName} plan 
-                  based on your fitness, schedule, and goals â€” powered by AI.
+                  based on your fitness, schedule, and goals — powered by AI.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                   <Link
                     href="/signup"
                     className="inline-block bg-brand hover:bg-brand-hover text-white font-heading text-sm font-bold px-8 py-3 rounded-lg transition-all hover:-translate-y-0.5"
                   >
-                    Get my custom plan â€” Â£4.99/mo
+                    Get my custom plan — £4.99/mo
                   </Link>
                   <Link
                     href={`/plans/${getBestPlanForDistance(selectedDist)?.slug || "couch-to-5k"}`}
                     className="text-sm text-gray-400 hover:text-white transition-colors"
                   >
-                    or view the full free plan â†’
+                    or view the full free plan →
                   </Link>
                 </div>
                 <div className="flex items-center justify-center gap-4 mt-4 text-[11px] text-gray-500">
-                  <span>âœ“ Personalised paces</span>
-                  <span>âœ“ Weekly adjustments</span>
-                  <span>âœ“ Strava sync</span>
+                  <span>✓ Personalised paces</span>
+                  <span>✓ Weekly adjustments</span>
+                  <span>✓ Strava sync</span>
                 </div>
               </div>
             </div>
@@ -336,7 +336,7 @@ export default function HomePage() {
         )}
       </AnimatePresence>
 
-      {/* â”€â”€â”€ SAMPLE PLANS â”€â”€â”€ */}
+      {/* ─── SAMPLE PLANS ─── */}
       <section className="bg-bg-page py-16 sm:py-20 border-t border-[#E4E4E8]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
@@ -344,7 +344,7 @@ export default function HomePage() {
               Free training plans
             </h2>
             <p className="text-text-secondary text-base sm:text-lg max-w-lg mx-auto">
-              Browse sample plans for every level â€” then upgrade to Pro for a plan built around <em>your</em> data.
+              Browse sample plans for every level — then upgrade to Pro for a plan built around <em>your</em> data.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -358,7 +358,7 @@ export default function HomePage() {
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${LEVEL_COLORS[plan.level] || ""}`}>
                     {plan.level}
                   </span>
-                  <span className="text-[11px] text-text-muted">{plan.weeks}w Â· {plan.daysPerWeek}Ã—/wk</span>
+                  <span className="text-[11px] text-text-muted">{plan.weeks}w · {plan.daysPerWeek}×/wk</span>
                 </div>
                 <h3 className="font-heading font-bold text-base text-text-primary group-hover:text-brand transition-colors mb-1">
                   {plan.title}
@@ -369,13 +369,13 @@ export default function HomePage() {
           </div>
           <div className="text-center mt-6">
             <Link href="/plans" className="text-sm font-medium text-brand hover:text-brand-hover transition-colors">
-              View all {SAMPLE_PLANS.length} free plans â†’
+              View all {SAMPLE_PLANS.length} free plans →
             </Link>
           </div>
         </div>
       </section>
 
-      {/* â”€â”€â”€ HOW IT WORKS â”€â”€â”€ */}
+      {/* ─── HOW IT WORKS ─── */}
       <section className="bg-bg-page py-16 sm:py-20 border-t border-[#E4E4E8]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
@@ -404,7 +404,7 @@ export default function HomePage() {
               <div className="space-y-5">
                 {[
                   { step: "01", title: "Connect", desc: "Link Strava, Garmin, or enter a recent race result manually." },
-                  { step: "02", title: "AI Analyses", desc: "Your history, fitness trends, strengths, and limiters â€” analysed instantly." },
+                  { step: "02", title: "AI Analyses", desc: "Your history, fitness trends, strengths, and limiters — analysed instantly." },
                   { step: "03", title: "You Get", desc: "A training plan that actually fits your life and your goals." },
                 ].map((item) => (
                   <div key={item.step} className="flex gap-4 items-start">
@@ -423,7 +423,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* â”€â”€â”€ FREE TOOLS â€” dark â”€â”€â”€ */}
+      {/* ─── FREE TOOLS — dark ─── */}
       <section className="bg-bg-dark text-text-on-dark py-16 sm:py-20">
         <div className="max-w-[920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -451,13 +451,13 @@ export default function HomePage() {
 
           <div className="text-center mt-8">
             <Link href="/tools" className="text-sm font-medium text-brand hover:text-brand-hover transition-colors">
-              View all 12 tools â†’
+              View all 12 tools →
             </Link>
           </div>
         </div>
       </section>
 
-      {/* â”€â”€â”€ PRO CTA â”€â”€â”€ */}
+      {/* ─── PRO CTA ─── */}
       <section className="relative bg-bg-dark text-text-on-dark py-20 sm:py-28 overflow-hidden">
         {/* Background image */}
         <div className="absolute inset-0">
@@ -484,10 +484,10 @@ export default function HomePage() {
             href="/signup"
             className="inline-block bg-brand hover:bg-brand-hover text-white font-heading text-[15px] font-bold px-9 py-3.5 rounded-[10px] transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand/25"
           >
-            Get started â€” Â£4.99/month
+            Get started — £4.99/month
           </Link>
           <p className="text-[13px] text-gray-400 mt-4">
-            Cancel anytime. No free trial â€” just results.
+            Cancel anytime. No free trial — just results.
           </p>
         </div>
       </section>
@@ -495,7 +495,7 @@ export default function HomePage() {
   );
 }
 
-/* â”€â”€â”€ Sample Plan Preview Component â”€â”€â”€ */
+/* ─── Sample Plan Preview Component ─── */
 function SamplePlanPreview({ distanceKey }: { distanceKey: string }) {
   const plan = getBestPlanForDistance(distanceKey);
   if (!plan) return null;
@@ -514,7 +514,7 @@ function SamplePlanPreview({ distanceKey }: { distanceKey: string }) {
             {plan.title}
           </h3>
           <p className="text-xs text-text-secondary mt-0.5">
-            {plan.weeks} weeks Â· {plan.daysPerWeek}Ã— per week Â· Peak {plan.peakWeeklyKm}km/wk
+            {plan.weeks} weeks · {plan.daysPerWeek}× per week · Peak {plan.peakWeeklyKm}km/wk
           </p>
         </div>
         <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-brand/10 text-brand">
@@ -537,7 +537,7 @@ function SamplePlanPreview({ distanceKey }: { distanceKey: string }) {
               const keySessions = week.days
                 .filter((d) => d && d !== "" && d !== "Rest")
                 .slice(0, 3)
-                .join(" Â· ");
+                .join(" · ");
               return (
                 <tr key={week.week} className="border-t border-[#E4E4E8]/50 hover:bg-bg-page/50 transition-colors">
                   <td className="px-4 py-3 font-mono font-bold text-text-primary">{week.week}</td>
@@ -554,7 +554,7 @@ function SamplePlanPreview({ distanceKey }: { distanceKey: string }) {
                     href={`/plans/${plan.slug}`}
                     className="text-sm text-brand hover:text-brand-hover font-medium transition-colors"
                   >
-                    View all {plan.weeks} weeks â†’
+                    View all {plan.weeks} weeks →
                   </Link>
                 </td>
               </tr>

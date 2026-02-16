@@ -47,13 +47,13 @@ export async function GET(request: Request) {
           profile?.subscription_status === "trialing";
 
         if (!isOnboarded) {
-          // Brand new user â€” needs onboarding first
+          // Brand new user — needs onboarding first
           destination = "/onboarding";
         } else if (!isPro) {
-          // Returning user without subscription â€” send to pricing
+          // Returning user without subscription — send to pricing
           destination = "/pricing";
         } else {
-          // Pro user â€” go to their plan dashboard
+          // Pro user — go to their plan dashboard
           destination = "/plan";
         }
       }
