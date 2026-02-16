@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import CheckoutButton from "@/components/CheckoutButton";
 
 interface SubscriptionGateProps {
   children: React.ReactNode;
@@ -128,12 +129,11 @@ export default function SubscriptionGate({ children, fallback }: SubscriptionGat
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href="/pricing"
+            <CheckoutButton
               className="bg-brand hover:bg-brand-hover text-white font-semibold px-8 py-3 rounded-xl transition-colors"
             >
               Subscribe to Pro
-            </Link>
+            </CheckoutButton>
             <Link
               href="/tools"
               className="border border-gray-300 text-gray-700 font-semibold px-8 py-3 rounded-xl hover:bg-gray-50 transition-colors"

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import CheckoutButton from "@/components/CheckoutButton";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -56,12 +57,11 @@ export default function Navbar() {
                       </Link>
                     )}
                     {!isPro && (
-                      <Link
-                        href="/pricing"
+                      <CheckoutButton
                         className="text-[13px] font-medium text-brand hover:text-brand-hover transition-colors"
                       >
                         Upgrade to Pro
-                      </Link>
+                      </CheckoutButton>
                     )}
                     <Link
                       href="/settings"
@@ -163,9 +163,12 @@ export default function Navbar() {
                       My Plan
                     </Link>
                   ) : (
-                    <Link href="/pricing" className="px-3 py-2.5 text-sm font-semibold text-brand hover:text-brand-hover" onClick={() => setMobileOpen(false)}>
+                    <CheckoutButton
+                      className="px-3 py-2.5 text-sm font-semibold text-brand hover:text-brand-hover text-left w-full"
+                      onClick={() => setMobileOpen(false)}
+                    >
                       Upgrade to Pro
-                    </Link>
+                    </CheckoutButton>
                   )}
                   <Link href="/settings" className="px-3 py-2.5 text-sm font-medium text-text-dark-sec hover:text-white" onClick={() => setMobileOpen(false)}>
                     Settings
