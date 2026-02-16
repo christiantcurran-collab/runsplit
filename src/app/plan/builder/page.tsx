@@ -140,59 +140,88 @@ export default function PlanBuilderPage() {
 
       let buffer = "";
 
-      while (true) {
+      // Process a single SSE event — returns true if we should stop reading
+      const processEvent = (eventType: string, eventData: string): boolean => {
+        try {
+          const data = JSON.parse(eventData);
+
+          if (eventType === "progress") {
+            setProgressPhase(data.phase);
+            setProgressMessage(data.message);
+            setProgressPercent(data.percent);
+            if (data.weeksBuilt !== undefined) setWeeksBuilt(data.weeksBuilt);
+            if (data.totalWeeks !== undefined) setTotalWeeks(data.totalWeeks);
+          } else if (eventType === "complete") {
+            router.push(`/plan?new=${data.planId}`);
+            return true; // stop reading
+          } else if (eventType === "error") {
+            throw new Error(data.message);
+          }
+        } catch (parseErr) {
+          if (parseErr instanceof Error && parseErr.message !== "Unexpected end of JSON input") {
+            throw parseErr;
+          }
+        }
+        return false;
+      };
+
+      let shouldStop = false;
+
+      while (!shouldStop) {
         const { done, value } = await reader.read();
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
 
-        // Parse SSE events from buffer
-        const lines = buffer.split("\n");
-        buffer = "";
+        // Process complete SSE events from buffer
+        // Each SSE event is: "event: <type>\ndata: <json>\n\n"
+        // We split on double-newline to find complete events
+        let eventBoundary = buffer.indexOf("\n\n");
+        while (eventBoundary !== -1) {
+          const rawEvent = buffer.slice(0, eventBoundary);
+          buffer = buffer.slice(eventBoundary + 2);
 
-        let currentEventType = "";
-        let currentData = "";
+          let eventType = "";
+          let eventData = "";
 
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i];
-
-          if (line.startsWith("event: ")) {
-            currentEventType = line.slice(7).trim();
-          } else if (line.startsWith("data: ")) {
-            currentData = line.slice(6);
-          } else if (line === "" && currentEventType && currentData) {
-            // Process event
-            try {
-              const data = JSON.parse(currentData);
-
-              if (currentEventType === "progress") {
-                setProgressPhase(data.phase);
-                setProgressMessage(data.message);
-                setProgressPercent(data.percent);
-                if (data.weeksBuilt !== undefined) setWeeksBuilt(data.weeksBuilt);
-                if (data.totalWeeks !== undefined) setTotalWeeks(data.totalWeeks);
-              } else if (currentEventType === "complete") {
-                router.push(`/plan?new=${data.planId}`);
-                return;
-              } else if (currentEventType === "error") {
-                throw new Error(data.message);
-              }
-            } catch (parseErr) {
-              // If it's an error event thrown from above, re-throw
-              if (parseErr instanceof Error && parseErr.message !== "Unexpected end of JSON input") {
-                throw parseErr;
-              }
+          for (const line of rawEvent.split("\n")) {
+            if (line.startsWith("event: ")) {
+              eventType = line.slice(7).trim();
+            } else if (line.startsWith("data: ")) {
+              eventData = line.slice(6);
             }
-
-            currentEventType = "";
-            currentData = "";
-          } else if (line !== "" && !line.startsWith("event:") && !line.startsWith("data:")) {
-            // Incomplete line, add back to buffer
-            buffer = lines.slice(i).join("\n");
-            break;
           }
+
+          if (eventType && eventData) {
+            shouldStop = processEvent(eventType, eventData);
+            if (shouldStop) return;
+          }
+
+          eventBoundary = buffer.indexOf("\n\n");
         }
       }
+
+      // If stream ended without a "complete" event, try to process remaining buffer
+      if (buffer.trim()) {
+        let eventType = "";
+        let eventData = "";
+        for (const line of buffer.split("\n")) {
+          if (line.startsWith("event: ")) {
+            eventType = line.slice(7).trim();
+          } else if (line.startsWith("data: ")) {
+            eventData = line.slice(6);
+          }
+        }
+        if (eventType && eventData) {
+          processEvent(eventType, eventData);
+          return;
+        }
+      }
+
+      // If we get here, stream ended without a complete event — redirect anyway
+      // The plan was likely saved; just go to the dashboard
+      console.warn("SSE stream ended without complete event — redirecting to plan dashboard");
+      router.push("/plan");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to generate plan. Please try again.");
       setGenerating(false);

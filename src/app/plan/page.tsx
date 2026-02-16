@@ -28,10 +28,22 @@ export default function PlanDashboard() {
   const [completedWorkouts, setCompletedWorkouts] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      // If auth is still loading, don't do anything yet
+      // Once user appears (or auth resolves), this effect re-runs
+      return;
+    }
     loadPlan();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // Safety: if user never loads after 10s, stop the spinner
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (loading) setLoading(false);
+    }, 10000);
+    return () => clearTimeout(timeout);
+  }, [loading]);
 
   async function loadPlan() {
     try {
