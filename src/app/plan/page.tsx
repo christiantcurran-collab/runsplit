@@ -34,28 +34,34 @@ export default function PlanDashboard() {
   }, [user]);
 
   async function loadPlan() {
-    const { data } = await supabase
-      .from("training_plans")
-      .select("*")
-      .eq("user_id", user!.id)
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
+    try {
+      const { data } = await supabase
+        .from("training_plans")
+        .select("*")
+        .eq("user_id", user!.id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
 
-    setPlan(data);
-    setLoading(false);
+      setPlan(data);
 
-    // Load completed workouts
-    if (data) {
-      const { data: logs } = await supabase
-        .from("training_log")
-        .select("planned_workout_id")
-        .eq("plan_id", data.id)
-        .eq("completed", true);
-      if (logs) {
-        setCompletedWorkouts(new Set(logs.map((l) => l.planned_workout_id).filter(Boolean)));
+      // Load completed workouts
+      if (data) {
+        const { data: logs } = await supabase
+          .from("training_log")
+          .select("planned_workout_id")
+          .eq("plan_id", data.id)
+          .eq("completed", true);
+        if (logs) {
+          setCompletedWorkouts(new Set(logs.map((l) => l.planned_workout_id).filter(Boolean)));
+        }
       }
+    } catch (err) {
+      console.error("Failed to load plan:", err);
+      setPlan(null);
+    } finally {
+      setLoading(false);
     }
   }
 

@@ -13,8 +13,9 @@ export default function SubscriptionGate({ children, fallback }: SubscriptionGat
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="w-8 h-8 border-3 border-brand border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-[60vh] flex flex-col items-center justify-center py-12">
+        <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin mb-3" />
+        <p className="text-sm text-text-muted">Loading your account...</p>
       </div>
     );
   }
