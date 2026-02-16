@@ -57,3 +57,4 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${appUrl}/settings?strava=error`);
   }
 }
+

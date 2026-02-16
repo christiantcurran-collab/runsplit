@@ -218,3 +218,4 @@ export interface StravaApiAthlete {
   state: string;
   country: string;
 }
+

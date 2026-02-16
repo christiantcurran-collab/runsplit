@@ -8,6 +8,12 @@ export async function GET(request: Request) {
   const redirect = searchParams.get("redirect") || "";
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
 
+  // Debug logging
+  console.log("Auth callback - Full URL:", request.url);
+  console.log("Auth callback - Code:", code ? "present" : "missing");
+  console.log("Auth callback - Redirect param:", redirect || "(empty)");
+  console.log("Auth callback - Site URL:", siteUrl);
+
   if (code) {
     const cookieStore = cookies();
     const supabase = createServerClient(
@@ -57,6 +63,9 @@ export async function GET(request: Request) {
           destination = "/plan";
         }
       }
+
+      console.log("Auth callback - Final destination:", destination);
+      console.log("Auth callback - Redirecting to:", `${siteUrl}${destination}`);
 
       return NextResponse.redirect(`${siteUrl}${destination}`);
     }
