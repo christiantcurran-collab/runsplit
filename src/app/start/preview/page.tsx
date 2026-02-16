@@ -216,7 +216,7 @@ function PreviewContent() {
           </ul>
 
           <Link
-            href="/signup?from=preview"
+            href="/start/checkout"
             className="inline-block w-full max-w-xs bg-brand hover:bg-brand-hover text-white font-heading text-sm font-bold py-3.5 rounded-lg transition-all"
           >
             Start Pro — £4.99/mo →
