@@ -40,11 +40,18 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // IMPORTANT: getUser() refreshes the auth token in cookies.
-  // This must run so that the client-side onAuthStateChange picks up
-  // a valid session. Without this, expired tokens won't get refreshed
-  // and the user will appear logged out.
-  await supabase.auth.getUser();
+  // Use getSession() instead of getUser().
+  // getSession() only contacts the Supabase server if the token needs refreshing.
+  // getUser() contacts it EVERY time and can clear the session if that call fails,
+  // which causes the "login works then immediately logged out" bug.
+  //
+  // Wrapped in try/catch to prevent ANY failure from affecting the response.
+  try {
+    await supabase.auth.getSession();
+  } catch {
+    // Swallow errors — don't let a failed session refresh break the page load.
+    // The client-side AuthProvider will handle auth state.
+  }
 
   return response;
 }
