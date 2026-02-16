@@ -1,16 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-bg-page flex items-center justify-center"><div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" /></div>}>
+      <SignupContent />
+    </Suspense>
+  );
+}
+
+function SignupContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect") || "";
 
   const supabase = createClient();
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
@@ -20,10 +31,15 @@ export default function SignupPage() {
     setLoading(true);
     setError("");
 
+    // Pass redirect in the callback URL
+    const callbackUrl = redirect
+      ? `${siteUrl}/auth/callback?redirect=${encodeURIComponent(redirect)}`
+      : `${siteUrl}/auth/callback`;
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${siteUrl}/auth/callback` },
+      options: { emailRedirectTo: callbackUrl },
     });
 
     if (error) {
@@ -71,6 +87,7 @@ export default function SignupPage() {
           <div className="mb-4">
             <GoogleSignInButton
               text="signup_with"
+              redirectUrl={redirect ? `/auth/callback?redirect=${encodeURIComponent(redirect)}` : undefined}
               onAuthStart={() => setLoading(true)}
               onError={(msg) => { setError(msg); setLoading(false); }}
             />
@@ -102,11 +119,10 @@ export default function SignupPage() {
               <input
                 type="password"
                 required
-                minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full border border-[#E4E4E8] rounded-lg px-3 py-2.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
-                placeholder="Minimum 6 characters"
+                placeholder="Choose a strong password"
               />
             </div>
             <button
@@ -114,25 +130,18 @@ export default function SignupPage() {
               disabled={loading}
               className="w-full bg-brand hover:bg-brand-hover text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50"
             >
-              {loading ? "Creating account..." : "Create Account"}
+              {loading ? "Creating account..." : "Sign Up"}
             </button>
           </form>
-
-          <p className="text-xs text-text-muted text-center mt-4">
-            Cancel anytime. No free trial — just results.
-          </p>
         </div>
 
         <p className="text-center text-sm text-text-secondary mt-6">
           Already have an account?{" "}
-          <Link href="/login" className="text-brand hover:text-brand-hover font-medium">
-            Log in
+          <Link href={`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`} className="text-brand hover:text-brand-hover font-medium">
+            Sign in
           </Link>
         </p>
       </div>
     </div>
   );
 }
-
-
-

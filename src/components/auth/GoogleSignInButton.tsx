@@ -11,12 +11,14 @@ import { createClient } from "@/lib/supabase";
 
 interface GoogleSignInButtonProps {
   text?: "signin_with" | "signup_with" | "continue_with";
+  redirectUrl?: string; // Optional custom redirect URL (e.g. with ?redirect= param)
   onAuthStart?: () => void;
   onError?: (message: string) => void;
 }
 
 export default function GoogleSignInButton({
   text = "continue_with",
+  redirectUrl,
   onAuthStart,
   onError,
 }: GoogleSignInButtonProps) {
@@ -36,10 +38,11 @@ export default function GoogleSignInButton({
 
     try {
       const siteUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+      const callbackUrl = redirectUrl || `/auth/callback`;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${siteUrl}/auth/callback`,
+          redirectTo: `${siteUrl}${callbackUrl}`,
         },
       });
 

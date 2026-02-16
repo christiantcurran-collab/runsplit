@@ -133,6 +133,7 @@ function LoginContent() {
           <div className="mb-4">
             <GoogleSignInButton
               text="continue_with"
+              redirectUrl={redirect !== "/plan" ? `/auth/callback?redirect=${encodeURIComponent(redirect)}` : undefined}
               onAuthStart={() => setLoading(true)}
               onError={(msg) => { setError(msg); setLoading(false); }}
             />
