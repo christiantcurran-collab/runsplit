@@ -34,19 +34,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const supabaseRef = useRef(createClient());
-  const profileFetchRef = useRef<string | null>(null);
-  const initializedRef = useRef(false);
+  const mountedRef = useRef(true);
 
   const fetchProfile = useCallback(async (userId: string) => {
-    if (profileFetchRef.current === userId) return;
-    profileFetchRef.current = userId;
-
     try {
       const { data, error } = await supabaseRef.current
         .from("profiles")
         .select("*")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
+
+      if (!mountedRef.current) return;
 
       if (error) {
         console.warn("Profile fetch error:", error.message);
@@ -56,105 +54,94 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (err) {
       console.error("Profile fetch exception:", err);
-      setProfile(null);
+      if (mountedRef.current) setProfile(null);
     }
   }, []);
 
   const refreshProfile = useCallback(async () => {
     if (user) {
-      profileFetchRef.current = null;
       await fetchProfile(user.id);
     }
   }, [user, fetchProfile]);
 
   useEffect(() => {
-    let mounted = true;
+    mountedRef.current = true;
     const supabase = supabaseRef.current;
 
-    // ---------------------------------------------------------------
-    // PRIMARY: getSession() — reads from cookies, no server call
-    // unless token refresh is needed. This is the reliable way to
-    // get the initial auth state.
-    // ---------------------------------------------------------------
-    const initSession = async () => {
+    // Safety timeout: ALWAYS stop loading after 5 seconds, no matter what
+    const safetyTimeout = setTimeout(() => {
+      if (mountedRef.current) {
+        console.warn("Auth: Safety timeout reached");
+        setLoading(false);
+      }
+    }, 5000);
+
+    // Simple, single-path initialization
+    const initialize = async () => {
       try {
+        console.log("Auth: Starting initialization");
+        
         const {
           data: { session },
+          error: sessionError,
         } = await supabase.auth.getSession();
 
-        if (!mounted || initializedRef.current) return;
-        initializedRef.current = true;
+        if (sessionError) {
+          console.error("Auth: getSession error:", sessionError);
+        }
+
+        if (!mountedRef.current) return;
 
         const currentUser = session?.user ?? null;
+        console.log("Auth: Got session, user:", currentUser?.id || "none");
+        
         setUser(currentUser);
+
         if (currentUser) {
-          await fetchProfile(currentUser.id);
+          console.log("Auth: Fetching profile for", currentUser.id);
+          // Fetch profile in background, don't block loading state
+          fetchProfile(currentUser.id).catch(console.error);
         }
+
+        // CRITICAL: Always set loading to false once we have auth state
+        setLoading(false);
+        console.log("Auth: Initialization complete, loading=false");
       } catch (err) {
-        console.error("getSession error:", err);
-      } finally {
-        if (mounted) setLoading(false);
+        console.error("Auth: Initialization error:", err);
+        if (mountedRef.current) {
+          setLoading(false);
+        }
       }
     };
 
-    initSession();
+    initialize();
 
-    // ---------------------------------------------------------------
-    // SECONDARY: onAuthStateChange — handles sign-in, sign-out,
-    // token refresh, and other auth events AFTER the initial load.
-    // ---------------------------------------------------------------
+    // Listen for auth changes (sign in, sign out, token refresh)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
+      if (!mountedRef.current) return;
 
-      // If INITIAL_SESSION fires before getSession completes, use it
-      if (event === "INITIAL_SESSION") {
-        if (!initializedRef.current) {
-          initializedRef.current = true;
-          const currentUser = session?.user ?? null;
-          setUser(currentUser);
-          if (currentUser) {
-            await fetchProfile(currentUser.id);
-          }
-          setLoading(false);
-        }
-        return;
-      }
-
-      // Handle subsequent auth events
-      const currentUser = session?.user ?? null;
+      console.log("Auth: State change event:", event);
 
       if (event === "SIGNED_OUT") {
         setUser(null);
         setProfile(null);
-        profileFetchRef.current = null;
         return;
       }
 
-      // SIGNED_IN, TOKEN_REFRESHED, USER_UPDATED, etc.
-      setUser(currentUser);
-      if (currentUser) {
-        profileFetchRef.current = null; // Force re-fetch on auth change
-        await fetchProfile(currentUser.id);
-      } else {
-        setProfile(null);
-        profileFetchRef.current = null;
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        if (currentUser) {
+          fetchProfile(currentUser.id).catch(console.error);
+        }
       }
     });
 
-    // Safety timeout — if neither getSession nor onAuthStateChange
-    // resolves within 6 seconds, stop the spinner
-    const timeout = setTimeout(() => {
-      if (mounted && loading) {
-        console.warn("Auth: safety timeout reached, stopping spinner");
-        setLoading(false);
-      }
-    }, 6000);
-
     return () => {
-      mounted = false;
-      clearTimeout(timeout);
+      mountedRef.current = false;
+      clearTimeout(safetyTimeout);
       subscription.unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -164,8 +151,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabaseRef.current.auth.signOut();
     setUser(null);
     setProfile(null);
-    profileFetchRef.current = null;
-    initializedRef.current = false;
   }, []);
 
   return (
