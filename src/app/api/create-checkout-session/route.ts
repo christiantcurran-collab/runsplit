@@ -36,8 +36,9 @@ export async function POST(request: Request) {
         // Check if the customer still exists in Stripe
         await stripe.customers.retrieve(customerId);
         console.log("Checkout: Using existing Stripe customer:", customerId);
-      } catch (err) {
-        console.log("Checkout: Existing customer ID invalid, creating new customer");
+      } catch (error) {
+        console.log("Checkout: Existing customer ID invalid:", error instanceof Error ? error.message : "Unknown error");
+        console.log("Checkout: Creating new customer");
         customerId = null; // Customer doesn't exist, create a new one
       }
     }
