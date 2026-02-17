@@ -58,99 +58,84 @@ export async function GET(request: Request) {
     );
 
     const { error, data } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error && data.user) {
-      // Clear the redirect cookies
-      cookieStore.delete('auth_redirect');
-      cookieStore.delete('auth_redirect_local');
-      
-      // Priority: state parameter > URL param > cookies
-      const finalRedirect = redirectFromState || redirect || (redirectFromCookie ? decodeURIComponent(redirectFromCookie) : "");
-      
-      console.log("Auth callback - Final redirect decision:", finalRedirect || "(none - will use client-side fallback)");
-      
-      // If we have a redirect from state or cookies, use it directly
-      if (finalRedirect && !redirect) {
-        console.log("Auth callback - Using redirect from state/cookie:", finalRedirect);
-        return NextResponse.redirect(`${siteUrl}${finalRedirect}`);
-      }
-      
-      // If no redirect at all, return HTML that checks client-side storage as last resort
-      if (!finalRedirect) {
-        console.log("Auth callback - No redirect in URL, returning HTML to check cookie/localStorage");
-        return new NextResponse(
-          `<!DOCTYPE html>
-          <html>
-          <head>
-            <title>Redirecting...</title>
-            <style>
-              body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-center; min-height: 100vh; margin: 0; background: #0C0C0F; color: #fff; }
-              .spinner { width: 48px; height: 48px; border: 4px solid #333; border-top-color: #FF6B35; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
-              @keyframes spin { to { transform: rotate(360deg); } }
-            </style>
-          </head>
-          <body>
-            <div style="text-align: center;">
-              <div class="spinner"></div>
-              <p>Completing sign in...</p>
-            </div>
-            <script>
-              console.log('🟢 AUTH CALLBACK: Starting redirect check');
-              console.log('  → Current URL:', window.location.href);
-              console.log('  → Current domain:', window.location.hostname);
-              
-              // Helper to get cookie value
-              function getCookie(name) {
-                const value = document.cookie.match('(^|;)\\\\s*' + name + '\\\\s*=\\\\s*([^;]+)');
-                return value ? decodeURIComponent(value.pop()) : '';
-              }
-              
-              // Check all possible storage locations
-              const cookieRedirect = getCookie('auth_redirect');
-              const cookieLocalRedirect = getCookie('auth_redirect_local');
-              const localStorageRedirect = localStorage.getItem('auth_redirect');
-              
-              console.log('🟢 AUTH CALLBACK: Checking all storage:');
-              console.log('  → Cookie (domain .runsplit.co):', cookieRedirect || '(none)');
-              console.log('  → Cookie (local domain):', cookieLocalRedirect || '(none)');
-              console.log('  → localStorage:', localStorageRedirect || '(none)');
-              console.log('  → All cookies:', document.cookie || '(none)');
-              
-              // Use any available redirect
-              let storedRedirect = cookieRedirect || cookieLocalRedirect || localStorageRedirect;
-              
-              if (storedRedirect) {
-                // Clear all storage
-                document.cookie = 'auth_redirect=; path=/; domain=.runsplit.co; max-age=0';
-                document.cookie = 'auth_redirect_local=; path=/; max-age=0';
-                localStorage.removeItem('auth_redirect');
-                
-                console.log('🟢 AUTH CALLBACK: ✅ Found redirect, navigating to:', storedRedirect);
-                console.log('  → Full URL will be:', window.location.origin + storedRedirect);
-                
-                window.location.href = storedRedirect;
-              } else {
-                console.log('🟢 AUTH CALLBACK: ❌ No redirect found, using smart routing');
-                console.log('  → Redirecting to /auth/callback/complete for profile check');
-                window.location.href = '/auth/callback/complete';
-              }
-            </script>
-          </body>
-          </html>`,
-          {
-            status: 200,
-            headers: { 'Content-Type': 'text/html' },
-          }
-        );
-      }
-
-      // If we have a redirect in URL, use it directly
-      console.log("Auth callback - Using redirect from URL:", redirect);
-      console.log("Auth callback - Redirecting to:", `${siteUrl}${redirect}`);
-      return NextResponse.redirect(`${siteUrl}${redirect}`);
-    }
+    
+    // Priority: state parameter > URL param > cookies
+    const finalRedirect = redirectFromState || redirect || (redirectFromCookie ? decodeURIComponent(redirectFromCookie) : "");
+    
+    // ALWAYS return HTML so we can log client-side (debug mode)
+    const exchangeSuccess = !error && !!data?.user;
+    const userId = data?.user?.id || "(none)";
+    const userEmail = data?.user?.email || "(none)";
+    
+    console.log("Auth callback - Exchange result:", exchangeSuccess ? "SUCCESS" : "FAILED");
+    console.log("Auth callback - Error:", error?.message || "(none)");
+    console.log("Auth callback - Final redirect:", finalRedirect || "(none)");
+    
+    // Return HTML that logs diagnostics then redirects
+    return new NextResponse(
+      `<!DOCTYPE html>
+      <html><head><title>Redirecting...</title>
+      <style>body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#0C0C0F;color:#fff;}.spinner{width:48px;height:48px;border:4px solid #333;border-top-color:#FF6B35;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px;}@keyframes spin{to{transform:rotate(360deg);}}</style>
+      </head><body><div style="text-align:center;"><div class="spinner"></div><p>Completing sign in...</p></div>
+      <script>
+        var diagnostics = {
+          location: 'auth/callback/route.ts:client-html',
+          message: 'Auth callback reached - client side',
+          data: {
+            currentUrl: window.location.href,
+            hostname: window.location.hostname,
+            fullSearch: window.location.search,
+            exchangeSuccess: ${exchangeSuccess},
+            userId: '${userId}',
+            userEmail: '${userEmail}',
+            exchangeError: '${error?.message || ""}',
+            finalRedirect: '${finalRedirect}',
+            redirectFromState: '${redirectFromState}',
+            redirectFromUrl: '${redirect}',
+            redirectFromCookie: '${redirectFromCookie || ""}',
+            siteUrl: '${siteUrl}',
+            allSearchParams: Object.fromEntries(new URLSearchParams(window.location.search))
+          },
+          timestamp: Date.now(),
+          hypothesisId: 'C_D'
+        };
+        
+        console.log('AUTH CALLBACK DIAGNOSTICS:', diagnostics);
+        
+        fetch('http://127.0.0.1:7242/ingest/9faee808-c16a-47b6-8374-5d2905920ea6',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify(diagnostics)
+        }).catch(function(){});
+        
+        var dest = '${finalRedirect}' || '/auth/callback/complete';
+        
+        if (!${exchangeSuccess}) {
+          dest = '/login?error=auth_failed';
+        }
+        
+        console.log('AUTH CALLBACK: Redirecting to:', dest);
+        
+        setTimeout(function() { window.location.href = dest; }, 200);
+      </script></body></html>`,
+      { status: 200, headers: { 'Content-Type': 'text/html' } }
+    );
   }
-
-  return NextResponse.redirect(`${siteUrl}/login?error=auth_failed`);
+  
+  // No code parameter at all - log and redirect
+  console.log("Auth callback - NO CODE in URL, redirecting to login");
+  
+  return new NextResponse(
+    `<!DOCTYPE html>
+    <html><head><title>Redirecting...</title></head><body>
+    <script>
+      fetch('http://127.0.0.1:7242/ingest/9faee808-c16a-47b6-8374-5d2905920ea6',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({location:'auth/callback:no-code',message:'No code in callback URL',data:{url:window.location.href,search:window.location.search,hostname:window.location.hostname},timestamp:Date.now(),hypothesisId:'D'})
+      }).catch(function(){});
+      window.location.href = '/login?error=auth_failed';
+    </script></body></html>`,
+    { status: 200, headers: { 'Content-Type': 'text/html' } }
+  );
 }
 
 

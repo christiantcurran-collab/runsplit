@@ -63,17 +63,28 @@ export default function GoogleSignInButton({
       console.log('  → State parameter:', stateData || '(none)');
       console.log('  → Current URL:', window.location.href);
       
-      const { error } = await supabase.auth.signInWithOAuth({
+      const oauthRedirectTo = `${siteUrl}/auth/callback`;
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/9faee808-c16a-47b6-8374-5d2905920ea6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GoogleSignInButton.tsx:handleGoogleSignIn',message:'OAuth starting',data:{siteUrl,oauthRedirectTo,redirectDest,redirectUrl,stateData,currentUrl:window.location.href},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
+      
+      const { error, data: oauthData } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${siteUrl}/auth/callback`,
+          redirectTo: oauthRedirectTo,
           // Use queryParams to pass state through Supabase
           queryParams: stateData ? {
             state: stateData,
           } : undefined,
         },
       });
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/9faee808-c16a-47b6-8374-5d2905920ea6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GoogleSignInButton.tsx:afterOAuth',message:'OAuth result',data:{error:error?.message,oauthUrl:oauthData?.url,oauthProvider:oauthData?.provider},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});
 
+      // #endregion
+      
       if (error) {
         setRedirecting(false);
         onError?.(error.message);
