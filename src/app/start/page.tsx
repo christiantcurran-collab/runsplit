@@ -32,7 +32,7 @@ const HEADLINES: Record<string, { h1: string; sub: string }> = {
   },
   default: {
     h1: "Get a running plan built\nfor your goal, your pace,\nand your life.",
-    sub: "AI coaching that adapts every week. From £4.99/mo.",
+    sub: "AI coaching that adapts every week. Built around your life.",
   },
 };
 
@@ -151,7 +151,7 @@ export default function StartPage() {
             Strava connected
           </span>
           <span className="hidden sm:inline text-bg-dark-border">·</span>
-          <span>Cancel anytime · £4.99/mo</span>
+          <span>Cancel anytime · No commitment</span>
         </div>
       </section>
 
