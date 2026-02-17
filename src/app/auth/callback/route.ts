@@ -29,16 +29,30 @@ export async function GET(request: Request) {
     );
 
     const { error, data } = await supabase.auth.exchangeCodeForSession(code);
+    const success = !error && !!data?.user;
+    const dest = success ? (redirect || '/auth/callback/complete') : '/login?error=auth_failed';
+    const fullDest = redirect ? `${siteUrl}${redirect}` : `${siteUrl}${dest}`;
 
-    if (!error && data.user) {
-      // If we have a redirect parameter, honour it
-      if (redirect) {
-        return NextResponse.redirect(`${siteUrl}${redirect}`);
-      }
-      // Otherwise use smart routing
-      return NextResponse.redirect(`${siteUrl}/auth/callback/complete`);
-    }
+    // Return HTML to log client-side before redirecting
+    return new NextResponse(
+      `<!DOCTYPE html><html><head><title>Redirecting...</title>
+      <style>body{font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#0C0C0F;color:#fff}.s{width:48px;height:48px;border:4px solid #333;border-top-color:#FF6B35;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}</style>
+      </head><body><div style="text-align:center"><div class="s"></div><p>Completing sign in...</p></div>
+      <script>
+      fetch('http://127.0.0.1:7242/ingest/9faee808-c16a-47b6-8374-5d2905920ea6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth/callback/route.ts',message:'Callback reached',data:{fullUrl:window.location.href,search:window.location.search,hostname:window.location.hostname,codePresent:${!!code},exchangeSuccess:${success},exchangeError:'${error?.message||""}',redirectParam:'${redirect}',siteUrl:'${siteUrl}',destination:'${dest}',fullDest:'${fullDest}'},timestamp:Date.now(),hypothesisId:'A_B_D_E'})}).catch(function(){});
+      setTimeout(function(){window.location.href='${fullDest}'},300);
+      </script></body></html>`,
+      {status:200,headers:{'Content-Type':'text/html'}}
+    );
   }
 
-  return NextResponse.redirect(`${siteUrl}/login?error=auth_failed`);
+  // No code - return HTML to log then redirect
+  return new NextResponse(
+    `<!DOCTYPE html><html><head><title>Redirecting...</title></head><body>
+    <script>
+    fetch('http://127.0.0.1:7242/ingest/9faee808-c16a-47b6-8374-5d2905920ea6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth/callback/route.ts:no-code',message:'No code in callback',data:{fullUrl:window.location.href,search:window.location.search,hostname:window.location.hostname},timestamp:Date.now(),hypothesisId:'A_D'})}).catch(function(){});
+    setTimeout(function(){window.location.href='${siteUrl}/login?error=auth_failed'},300);
+    </script></body></html>`,
+    {status:200,headers:{'Content-Type':'text/html'}}
+  );
 }
