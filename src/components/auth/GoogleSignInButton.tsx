@@ -54,44 +54,23 @@ export default function GoogleSignInButton({
         }
       }
       
-      // Store in BOTH cookie and localStorage for maximum compatibility
-      // Cookie works across subdomains (runsplit.co and www.runsplit.co)
-      // localStorage works if on same subdomain
-      if (redirectDest) {
-        // Try multiple cookie strategies in case domain setting doesn't work
-        const cookieValue = encodeURIComponent(redirectDest);
-        
-        // Strategy 1: Domain with leading dot (should work on both www and apex)
-        document.cookie = `auth_redirect=${cookieValue}; path=/; domain=.runsplit.co; max-age=600; SameSite=Lax`;
-        
-        // Strategy 2: No domain specified (uses current domain)
-        document.cookie = `auth_redirect_local=${cookieValue}; path=/; max-age=600; SameSite=Lax`;
-        
-        // Strategy 3: localStorage
-        localStorage.setItem('auth_redirect', redirectDest);
-        
-        console.log('🔵 GoogleSignIn: STORING REDIRECT');
-        console.log('  → Destination:', redirectDest);
-        console.log('  → Current URL:', window.location.href);
-        console.log('  → Cookie (domain):', document.cookie.includes('auth_redirect=') ? '✅ Set' : '❌ Failed');
-        console.log('  → Cookie (local):', document.cookie.includes('auth_redirect_local=') ? '✅ Set' : '❌ Failed');
-        console.log('  → localStorage:', localStorage.getItem('auth_redirect') ? '✅ Set' : '❌ Failed');
-        console.log('  → All cookies:', document.cookie);
-      } else {
-        // Clear all
-        document.cookie = 'auth_redirect=; path=/; domain=.runsplit.co; max-age=0';
-        document.cookie = 'auth_redirect_local=; path=/; max-age=0';
-        localStorage.removeItem('auth_redirect');
-        console.log('🔵 GoogleSignIn: No redirect to store, cleared all storage');
-      }
+      // Use OAuth state parameter (proper OAuth way to preserve redirect)
+      // This is more reliable than cookies across domains
+      const stateData = redirectDest ? JSON.stringify({ redirect: redirectDest }) : undefined;
       
-      const callbackUrl = `/auth/callback`;
-      console.log('GoogleSignIn: Starting OAuth with callback:', `${siteUrl}${callbackUrl}`);
+      console.log('🔵 GoogleSignIn: Starting OAuth');
+      console.log('  → Redirect destination:', redirectDest || '(none)');
+      console.log('  → State parameter:', stateData || '(none)');
+      console.log('  → Current URL:', window.location.href);
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${siteUrl}${callbackUrl}`,
+          redirectTo: `${siteUrl}/auth/callback`,
+          // Use queryParams to pass state through Supabase
+          queryParams: stateData ? {
+            state: stateData,
+          } : undefined,
         },
       });
 

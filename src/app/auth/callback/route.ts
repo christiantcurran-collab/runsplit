@@ -6,25 +6,38 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const redirect = searchParams.get("redirect") || "";
+  const state = searchParams.get("state") || "";
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
 
   // Debug logging
   console.log("Auth callback - Full URL:", request.url);
   console.log("Auth callback - Code:", code ? "present" : "missing");
   console.log("Auth callback - Redirect param from URL:", redirect || "(empty)");
+  console.log("Auth callback - State param:", state || "(empty)");
   console.log("Auth callback - Site URL:", siteUrl);
 
   if (code) {
     const cookieStore = cookies();
     
-    // Try to read redirect from server-side cookies FIRST
+    // Try to read redirect from OAuth state parameter (most reliable)
+    let redirectFromState = "";
+    if (state) {
+      try {
+        const stateData = JSON.parse(state);
+        redirectFromState = stateData.redirect || "";
+        console.log("Auth callback - Parsed state data:", stateData);
+      } catch (e) {
+        console.log("Auth callback - Failed to parse state:", e);
+      }
+    }
+    
+    // Fallback to cookies if state is not available
     const redirectFromCookie = cookieStore.get('auth_redirect')?.value || 
                                cookieStore.get('auth_redirect_local')?.value;
     
-    console.log("Auth callback - Checking server-side cookies:");
-    console.log("  → auth_redirect:", cookieStore.get('auth_redirect')?.value || "(none)");
-    console.log("  → auth_redirect_local:", cookieStore.get('auth_redirect_local')?.value || "(none)");
-    console.log("  → Final redirect from cookies:", redirectFromCookie || "(none)");
+    console.log("Auth callback - Checking redirect sources:");
+    console.log("  → From state parameter:", redirectFromState || "(none)");
+    console.log("  → From cookies:", redirectFromCookie || "(none)");
     
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,20 +60,22 @@ export async function GET(request: Request) {
     const { error, data } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && data.user) {
       // Clear the redirect cookies
-      if (redirectFromCookie) {
-        cookieStore.delete('auth_redirect');
-        cookieStore.delete('auth_redirect_local');
+      cookieStore.delete('auth_redirect');
+      cookieStore.delete('auth_redirect_local');
+      
+      // Priority: state parameter > URL param > cookies
+      const finalRedirect = redirectFromState || redirect || (redirectFromCookie ? decodeURIComponent(redirectFromCookie) : "");
+      
+      console.log("Auth callback - Final redirect decision:", finalRedirect || "(none - will use client-side fallback)");
+      
+      // If we have a redirect from state or cookies, use it directly
+      if (finalRedirect && !redirect) {
+        console.log("Auth callback - Using redirect from state/cookie:", finalRedirect);
+        return NextResponse.redirect(`${siteUrl}${finalRedirect}`);
       }
       
-      // Use server-side cookie redirect if available
-      if (redirectFromCookie && !redirect) {
-        const decodedRedirect = decodeURIComponent(redirectFromCookie);
-        console.log("Auth callback - Using redirect from server cookie:", decodedRedirect);
-        return NextResponse.redirect(`${siteUrl}${decodedRedirect}`);
-      }
-      
-      // If no redirect in URL, return HTML that checks cookie/localStorage client-side
-      if (!redirect) {
+      // If no redirect at all, return HTML that checks client-side storage as last resort
+      if (!finalRedirect) {
         console.log("Auth callback - No redirect in URL, returning HTML to check cookie/localStorage");
         return new NextResponse(
           `<!DOCTYPE html>
