@@ -10,6 +10,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Safety net: if an OAuth code arrives at the wrong path (e.g. homepage),
+  // redirect it to /auth/callback so the code gets properly exchanged.
+  const code = request.nextUrl.searchParams.get("code");
+  if (code && request.nextUrl.pathname !== "/auth/callback") {
+    const callbackUrl = request.nextUrl.clone();
+    // Preserve all query params (including ?redirect=) but change the path
+    callbackUrl.pathname = "/auth/callback";
+    return NextResponse.redirect(callbackUrl);
+  }
+
   let response = NextResponse.next({
     request: { headers: request.headers },
   });
