@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 
 interface PreviewWeek {
@@ -32,6 +33,7 @@ export default function PreviewPage() {
 
 function PreviewContent() {
   const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [preview, setPreview] = useState<PlanPreview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -40,10 +42,29 @@ function PreviewContent() {
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("annual");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
+  const autoCheckoutFired = useRef(false);
 
   useEffect(() => {
     loadPreview();
+    // Restore billing period if user is returning from sign-up
+    const pending = localStorage.getItem("runsplit_pending_checkout");
+    if (pending === "monthly" || pending === "annual") {
+      setBillingPeriod(pending);
+    }
   }, []);
+
+  // Auto-trigger checkout when user returns logged in after sign-up
+  useEffect(() => {
+    if (authLoading || !user || autoCheckoutFired.current) return;
+    const pending = localStorage.getItem("runsplit_pending_checkout");
+    if (pending === "monthly" || pending === "annual") {
+      autoCheckoutFired.current = true;
+      localStorage.removeItem("runsplit_pending_checkout");
+      setBillingPeriod(pending);
+      // Small delay to let state settle, then go to Stripe
+      setTimeout(() => initiateCheckoutWithPlan(pending), 300);
+    }
+  }, [authLoading, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadPreview() {
     setLoading(true);
@@ -67,14 +88,14 @@ function PreviewContent() {
     }
   }
 
-  async function initiateCheckout() {
+  async function initiateCheckoutWithPlan(plan: "monthly" | "annual") {
     setCheckoutLoading(true);
     setCheckoutError("");
     try {
       const res = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: billingPeriod }),
+        body: JSON.stringify({ plan }),
       });
       const data = await res.json();
 
@@ -89,6 +110,16 @@ function PreviewContent() {
       setCheckoutError("Failed to start checkout. Please try again.");
       setCheckoutLoading(false);
     }
+  }
+
+  async function initiateCheckout() {
+    await initiateCheckoutWithPlan(billingPeriod);
+  }
+
+  function handleSignUpClick() {
+    // Save billing choice so we can auto-checkout after sign-up
+    localStorage.setItem("runsplit_pending_checkout", billingPeriod);
+    router.push("/signup?redirect=/start/preview");
   }
 
   if (loading) {
@@ -315,12 +346,12 @@ function PreviewContent() {
               {checkoutLoading ? "Redirecting..." : "Start Free Trial →"}
             </button>
           ) : (
-            <Link
-              href="/signup?redirect=/start/preview"
-              className="inline-block w-full max-w-xs bg-brand hover:bg-brand-hover text-white font-heading text-sm font-bold py-3.5 rounded-lg transition-all"
+            <button
+              onClick={handleSignUpClick}
+              className="w-full max-w-xs bg-brand hover:bg-brand-hover text-white font-heading text-sm font-bold py-3.5 rounded-lg transition-all mx-auto"
             >
               Sign Up to Start Free Trial →
-            </Link>
+            </button>
           )}
 
           <p className="text-[11px] text-text-dark-muted mt-3">
