@@ -290,9 +290,6 @@ export default function StartPage() {
           >
             Get Your Plan →
           </Link>
-          <p className="text-[13px] text-text-dark-muted mt-4">
-            Free assessment · No card required · Cancel anytime
-          </p>
         </div>
       </section>
     </div>
