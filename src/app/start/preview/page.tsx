@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useAuth } from "@/components/AuthProvider";
 
 interface PreviewWeek {
   weekNumber: number;
@@ -30,9 +31,15 @@ export default function PreviewPage() {
 }
 
 function PreviewContent() {
+  const { user, loading: authLoading } = useAuth();
   const [preview, setPreview] = useState<PlanPreview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Billing & checkout state
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("annual");
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
 
   useEffect(() => {
     loadPreview();
@@ -57,6 +64,30 @@ function PreviewContent() {
       setError(err instanceof Error ? err.message : "Failed to load plan preview");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function initiateCheckout() {
+    setCheckoutLoading(true);
+    setCheckoutError("");
+    try {
+      const res = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: billingPeriod }),
+      });
+      const data = await res.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setCheckoutError(data.error || "Failed to start checkout");
+        setCheckoutLoading(false);
+      }
+    } catch (err) {
+      console.error("Checkout error:", err);
+      setCheckoutError("Failed to start checkout. Please try again.");
+      setCheckoutLoading(false);
     }
   }
 
@@ -191,7 +222,7 @@ function PreviewContent() {
           </div>
         )}
 
-        {/* Pro CTA */}
+        {/* ── Pro CTA with billing toggle ── */}
         <div className="mt-8 bg-gradient-to-r from-brand/20 to-brand-hover/20 border border-brand/30 rounded-2xl p-8 text-center">
           <h2 className="font-heading font-bold text-xl text-white mb-2">
             Unlock your full {preview.totalWeeks}-week plan
@@ -215,28 +246,88 @@ function PreviewContent() {
             ))}
           </ul>
 
-          <Link
-            href="/start/checkout"
-            className="inline-block w-full max-w-xs bg-brand hover:bg-brand-hover text-white font-heading text-sm font-bold py-3.5 rounded-lg transition-all"
-          >
-            Start Pro — £4.99/mo →
-          </Link>
-          <p className="text-[11px] text-text-dark-muted mt-3">
-            7-day free trial · Cancel anytime
-          </p>
-        </div>
+          {/* Billing toggle */}
+          <div className="flex items-center justify-center mb-5">
+            <div className="bg-white/10 rounded-full p-1 inline-flex">
+              <button
+                onClick={() => setBillingPeriod("monthly")}
+                className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
+                  billingPeriod === "monthly"
+                    ? "bg-brand text-white"
+                    : "text-text-dark-sec hover:text-white"
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingPeriod("annual")}
+                className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
+                  billingPeriod === "annual"
+                    ? "bg-brand text-white"
+                    : "text-text-dark-sec hover:text-white"
+                }`}
+              >
+                Annual
+                <span className="ml-1.5 bg-success/20 text-success text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                  -33%
+                </span>
+              </button>
+            </div>
+          </div>
 
-        {/* Free option */}
-        <div className="mt-4 text-center">
-          <Link
-            href="/signup?from=preview&tier=free"
-            className="text-sm text-text-dark-muted hover:text-brand transition-colors underline underline-offset-4"
-          >
-            Or continue with Free (limited tools only)
-          </Link>
+          {/* Price display */}
+          <div className="mb-5">
+            <span className="font-heading font-extrabold text-4xl text-white">
+              {billingPeriod === "annual" ? "\u00A33.33" : "\u00A34.99"}
+            </span>
+            <span className="text-text-dark-sec text-sm ml-1">/ month</span>
+            {billingPeriod === "annual" && (
+              <p className="text-text-dark-sec text-xs mt-1">
+                Billed as &pound;39.99/year
+                <span className="ml-1.5 text-success font-semibold">save 33%</span>
+              </p>
+            )}
+            {billingPeriod === "monthly" && (
+              <p className="text-text-dark-sec text-xs mt-1">
+                or{" "}
+                <button onClick={() => setBillingPeriod("annual")} className="text-brand hover:text-brand-hover font-semibold">
+                  &pound;39.99/year (save 33%)
+                </button>
+              </p>
+            )}
+          </div>
+
+          {checkoutError && (
+            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg p-3 mb-4 max-w-xs mx-auto">
+              {checkoutError}
+            </div>
+          )}
+
+          {/* CTA: logged-in → Stripe, logged-out → sign up */}
+          {authLoading ? (
+            <div className="w-8 h-8 border-3 border-brand border-t-transparent rounded-full animate-spin mx-auto" />
+          ) : user ? (
+            <button
+              onClick={initiateCheckout}
+              disabled={checkoutLoading}
+              className="w-full max-w-xs bg-brand hover:bg-brand-hover text-white font-heading text-sm font-bold py-3.5 rounded-lg transition-all disabled:opacity-50 mx-auto"
+            >
+              {checkoutLoading ? "Redirecting..." : "Start Free Trial →"}
+            </button>
+          ) : (
+            <Link
+              href="/signup?redirect=/start/preview"
+              className="inline-block w-full max-w-xs bg-brand hover:bg-brand-hover text-white font-heading text-sm font-bold py-3.5 rounded-lg transition-all"
+            >
+              Sign Up to Start Free Trial →
+            </Link>
+          )}
+
+          <p className="text-[11px] text-text-dark-muted mt-3">
+            7-day free trial · Cancel anytime · No lock-in
+          </p>
         </div>
       </div>
     </div>
   );
 }
-
