@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
+import AppleSignInButton from "@/components/auth/AppleSignInButton";
 
 export default function SignupPage() {
   return (
@@ -83,9 +84,15 @@ function SignupContent() {
         </div>
 
         <div className="bg-bg-card rounded-2xl border border-[#E4E4E8] p-8">
-          {/* Google — native GIS button (stays on runsplit.co) */}
-          <div className="mb-4">
+          {/* Social sign-in buttons */}
+          <div className="space-y-3 mb-4">
             <GoogleSignInButton
+              text="signup_with"
+              redirectUrl={redirect ? `/auth/callback?redirect=${encodeURIComponent(redirect)}` : undefined}
+              onAuthStart={() => setLoading(true)}
+              onError={(msg) => { setError(msg); setLoading(false); }}
+            />
+            <AppleSignInButton
               text="signup_with"
               redirectUrl={redirect ? `/auth/callback?redirect=${encodeURIComponent(redirect)}` : undefined}
               onAuthStart={() => setLoading(true)}

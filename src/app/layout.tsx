@@ -170,18 +170,6 @@ export default function RootLayout({
           <Footer />
         </AuthProvider>
 
-        {/* Debug: page load tracker */}
-        <Script id="debug-page-load" strategy="afterInteractive">
-          {`
-            // #region agent log
-            (function(){
-              var d={location:'layout.tsx:pageLoad',message:'Page loaded',data:{url:window.location.href,pathname:window.location.pathname,search:window.location.search,hostname:window.location.hostname,referrer:document.referrer},timestamp:Date.now(),hypothesisId:'D_E'};
-              fetch('http://127.0.0.1:7242/ingest/9faee808-c16a-47b6-8374-5d2905920ea6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).catch(function(){});
-            })();
-            // #endregion
-          `}
-        </Script>
-
         {/* Google Analytics */}
         {gaId && (
           <>
