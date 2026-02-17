@@ -47,10 +47,6 @@ export default function GoogleSignInButton({
         ? `${siteUrl}/auth/callback?redirect=${encodeURIComponent(redirectDest)}`
         : `${siteUrl}/auth/callback`;
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/9faee808-c16a-47b6-8374-5d2905920ea6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GoogleSignInButton.tsx:50',message:'OAuth starting',data:{siteUrl,callbackUrl,redirectDest,redirectUrl,currentUrl:window.location.href},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
-
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
