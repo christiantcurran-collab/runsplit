@@ -16,6 +16,16 @@ export async function GET(request: Request) {
 
   if (code) {
     const cookieStore = cookies();
+    
+    // Try to read redirect from server-side cookies FIRST
+    const redirectFromCookie = cookieStore.get('auth_redirect')?.value || 
+                               cookieStore.get('auth_redirect_local')?.value;
+    
+    console.log("Auth callback - Checking server-side cookies:");
+    console.log("  → auth_redirect:", cookieStore.get('auth_redirect')?.value || "(none)");
+    console.log("  → auth_redirect_local:", cookieStore.get('auth_redirect_local')?.value || "(none)");
+    console.log("  → Final redirect from cookies:", redirectFromCookie || "(none)");
+    
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -36,6 +46,19 @@ export async function GET(request: Request) {
 
     const { error, data } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && data.user) {
+      // Clear the redirect cookies
+      if (redirectFromCookie) {
+        cookieStore.delete('auth_redirect');
+        cookieStore.delete('auth_redirect_local');
+      }
+      
+      // Use server-side cookie redirect if available
+      if (redirectFromCookie && !redirect) {
+        const decodedRedirect = decodeURIComponent(redirectFromCookie);
+        console.log("Auth callback - Using redirect from server cookie:", decodedRedirect);
+        return NextResponse.redirect(`${siteUrl}${decodedRedirect}`);
+      }
+      
       // If no redirect in URL, return HTML that checks cookie/localStorage client-side
       if (!redirect) {
         console.log("Auth callback - No redirect in URL, returning HTML to check cookie/localStorage");

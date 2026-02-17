@@ -64,3 +64,5 @@ export async function GET(request: Request) {
   return NextResponse.redirect(`${siteUrl}${destination}`);
 }
 
+
+
