@@ -572,7 +572,7 @@ export default function PlanDashboard() {
           </Link>
           <Link href="/plan/log" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-brand-orange transition-colors text-center">
             <div className="text-2xl mb-1">📊</div>
-            <div className="text-sm font-semibold">Training Log</div>
+            <div className="text-sm font-semibold">Log & Analytics</div>
           </Link>
           <Link href="/settings" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-brand-orange transition-colors text-center">
             <div className="text-2xl mb-1">🔗</div>
