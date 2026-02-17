@@ -53,8 +53,8 @@ export async function GET(request: Request) {
     // Brand new user — needs onboarding first
     destination = "/onboarding";
   } else if (!isPro) {
-    // Returning user without subscription — send to pricing
-    destination = "/pricing";
+    // Returning user without subscription — send to checkout
+    destination = "/start/checkout";
   } else {
     // Pro user — go to their plan dashboard
     destination = "/plan";

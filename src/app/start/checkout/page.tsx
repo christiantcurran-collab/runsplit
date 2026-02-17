@@ -4,18 +4,11 @@ import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import Link from "next/link";
 
-/**
- * This page handles the checkout flow after quiz completion.
- * If user is logged in → sends to Stripe immediately
- * If not logged in → shows signup prompt
- */
 export default function StartCheckoutPage() {
   const { user, loading } = useAuth();
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("annual");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [error, setError] = useState("");
-
-  // Don't auto-trigger checkout on mount - wait for user to click
-  // This prevents issues with stale sessions or corrupted customer IDs
 
   async function initiateCheckout() {
     setCheckoutLoading(true);
@@ -24,10 +17,10 @@ export default function StartCheckoutPage() {
       const res = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: "monthly" }),
+        body: JSON.stringify({ plan: billingPeriod }),
       });
       const data = await res.json();
-      
+
       if (data.url) {
         window.location.href = data.url;
       } else {
@@ -46,7 +39,6 @@ export default function StartCheckoutPage() {
       <div className="min-h-screen bg-bg-dark flex flex-col items-center justify-center text-text-on-dark">
         <div className="w-14 h-14 border-4 border-brand border-t-transparent rounded-full animate-spin mb-6" />
         <h2 className="font-heading font-bold text-xl mb-2">Loading...</h2>
-        <p className="text-text-dark-sec text-sm">This will just take a moment.</p>
       </div>
     );
   }
@@ -56,7 +48,6 @@ export default function StartCheckoutPage() {
       <div className="min-h-screen bg-bg-dark flex flex-col items-center justify-center text-text-on-dark">
         <div className="w-14 h-14 border-4 border-brand border-t-transparent rounded-full animate-spin mb-6" />
         <h2 className="font-heading font-bold text-xl mb-2">Redirecting to checkout...</h2>
-        <p className="text-text-dark-sec text-sm">This will just take a moment.</p>
       </div>
     );
   }
@@ -75,7 +66,7 @@ export default function StartCheckoutPage() {
             href="/signup?redirect=/start/checkout"
             className="inline-block bg-brand hover:bg-brand-hover text-white font-heading text-sm font-bold px-8 py-3.5 rounded-lg transition-all"
           >
-            Sign Up →
+            Sign Up \u2192
           </Link>
           <p className="text-[11px] text-text-dark-muted mt-3">
             Already have an account?{" "}
@@ -88,36 +79,86 @@ export default function StartCheckoutPage() {
     );
   }
 
-  // User is logged in - show checkout button
+  // User is logged in — show billing toggle + checkout
   return (
     <div className="min-h-screen bg-bg-dark flex flex-col items-center justify-center text-text-on-dark px-4">
       <div className="max-w-md w-full text-center">
-        <h1 className="font-heading font-bold text-2xl mb-3">
+        <h1 className="font-heading font-bold text-2xl mb-2">
           Ready to unlock your full plan?
         </h1>
-        <p className="text-text-dark-sec mb-6">
-          Start your Pro subscription for £4.99/mo. Cancel anytime.
+        <p className="text-text-dark-sec mb-8 text-sm">
+          Start your 7-day free trial. Cancel anytime.
         </p>
-        
+
+        {/* Billing toggle */}
+        <div className="flex items-center justify-center mb-6">
+          <div className="bg-white/10 rounded-full p-1 inline-flex">
+            <button
+              onClick={() => setBillingPeriod("monthly")}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
+                billingPeriod === "monthly"
+                  ? "bg-brand text-white"
+                  : "text-text-dark-sec hover:text-white"
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingPeriod("annual")}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
+                billingPeriod === "annual"
+                  ? "bg-brand text-white"
+                  : "text-text-dark-sec hover:text-white"
+              }`}
+            >
+              Annual
+              <span className="ml-1.5 bg-success/20 text-success text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                -33%
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Price display */}
+        <div className="mb-6">
+          <span className="font-heading font-extrabold text-4xl text-white">
+            {billingPeriod === "annual" ? "\u00A33.33" : "\u00A34.99"}
+          </span>
+          <span className="text-text-dark-sec text-sm ml-1">/ month</span>
+          {billingPeriod === "annual" && (
+            <p className="text-text-dark-sec text-xs mt-1">
+              Billed as &pound;39.99/year
+              <span className="ml-1.5 text-success font-semibold">save 33%</span>
+            </p>
+          )}
+          {billingPeriod === "monthly" && (
+            <p className="text-text-dark-sec text-xs mt-1">
+              or{" "}
+              <button onClick={() => setBillingPeriod("annual")} className="text-brand hover:text-brand-hover font-semibold">
+                &pound;39.99/year (save 33%)
+              </button>
+            </p>
+          )}
+        </div>
+
         {error && (
           <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg p-3 mb-4">
             {error}
           </div>
         )}
-        
+
         <button
           onClick={initiateCheckout}
           disabled={checkoutLoading}
           className="w-full bg-brand hover:bg-brand-hover text-white font-heading text-sm font-bold py-3.5 rounded-lg transition-all disabled:opacity-50"
         >
-          Continue to Checkout →
+          Start Free Trial \u2192
         </button>
-        
+
         <p className="text-[11px] text-text-dark-muted mt-3">
-          7-day free trial · Cancel anytime
+          7-day free trial \u00B7 Cancel anytime \u00B7 No lock-in
         </p>
       </div>
     </div>
   );
 }
-
