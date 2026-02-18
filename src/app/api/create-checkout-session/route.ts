@@ -11,13 +11,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    // Parse optional body for plan selection (monthly/annual)
+    // Parse optional body for plan selection (monthly/annual) and promo code
     let plan: "monthly" | "annual" = "monthly";
+    let promoCode: string | undefined;
     try {
       const body = await request.json();
       if (body.plan === "annual") plan = "annual";
+      if (typeof body.promoCode === "string" && body.promoCode.trim()) {
+        promoCode = body.promoCode.trim().toUpperCase();
+      }
     } catch {
-      // No body sent, default to monthly
+      // No body sent, defaults apply
     }
 
     // Check if user already has a Stripe customer ID
@@ -65,21 +69,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Stripe ${plan} price not configured` }, { status: 500 });
     }
 
+    // Resolve promo code to a Stripe promotion_code ID (pre-applying it ensures
+    // Apple Pay sees the discounted price in the native payment sheet)
+    let resolvedPromoCodeId: string | undefined;
+    if (promoCode) {
+      const promoCodes = await stripe.promotionCodes.list({ code: promoCode, active: true, limit: 1 });
+      if (promoCodes.data.length === 0) {
+        return NextResponse.json({ error: "Invalid or expired promo code" }, { status: 400 });
+      }
+      resolvedPromoCodeId = promoCodes.data[0].id;
+      console.log("Checkout: Applying promo code", promoCode, "→", resolvedPromoCodeId);
+    }
+
+    // Build shared session params. When a promo code is pre-applied we use
+    // `discounts`; Stripe doesn't allow both `discounts` and `allow_promotion_codes`.
+    const sessionParams = {
+      mode: "subscription" as const,
+      payment_method_types: ["card"] as ["card"],
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/start/preview`,
+      subscription_data: {
+        trial_period_days: 3,
+        metadata: { supabase_user_id: user.id },
+      },
+      ...(resolvedPromoCodeId
+        ? { discounts: [{ promotion_code: resolvedPromoCodeId }] }
+        : { allow_promotion_codes: true }),
+    };
+
     // Try to create the checkout session
     let session;
     try {
-      session = await stripe.checkout.sessions.create({
-        customer: customerId,
-        mode: "subscription",
-        payment_method_types: ["card"],
-        line_items: [{ price: priceId, quantity: 1 }],
-        success_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/plan/builder?subscribed=true`,
-        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/start/preview`,
-        subscription_data: {
-          metadata: { supabase_user_id: user.id },
-        },
-        allow_promotion_codes: true,
-      });
+      session = await stripe.checkout.sessions.create({ customer: customerId, ...sessionParams });
     } catch (checkoutError: unknown) {
       // If customer doesn't exist error, create new customer and retry
       const errorMessage = checkoutError instanceof Error ? checkoutError.message : String(checkoutError);
@@ -97,19 +119,7 @@ export async function POST(request: Request) {
           .update({ stripe_customer_id: customerId })
           .eq("id", user.id);
 
-        // Retry checkout session creation with new customer
-        session = await stripe.checkout.sessions.create({
-          customer: customerId,
-          mode: "subscription",
-          payment_method_types: ["card"],
-          line_items: [{ price: priceId, quantity: 1 }],
-          success_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/plan/builder?subscribed=true`,
-          cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/start/preview`,
-          subscription_data: {
-            metadata: { supabase_user_id: user.id },
-          },
-          allow_promotion_codes: true,
-        });
+        session = await stripe.checkout.sessions.create({ customer: customerId, ...sessionParams });
       } else {
         throw checkoutError;
       }
