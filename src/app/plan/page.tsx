@@ -84,7 +84,15 @@ export default function PlanDashboard() {
       // Once user appears (or auth resolves), this effect re-runs
       return;
     }
-    loadPlan();
+    // #region agent log
+    const planLoadStartTime = Date.now();
+    fetch('http://127.0.0.1:7242/ingest/9faee808-c16a-47b6-8374-5d2905920ea6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'plan/page.tsx:87',message:'Plan page effect triggered, starting loadPlan',data:{userId:user?.id},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
+    loadPlan().finally(() => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/9faee808-c16a-47b6-8374-5d2905920ea6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'plan/page.tsx:88',message:'loadPlan completed',data:{durationMs:Date.now()-planLoadStartTime},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
@@ -361,6 +369,8 @@ export default function PlanDashboard() {
               <Link href="/plan/race-day" className="text-sm text-gray-400 hover:text-white transition-colors">Race Day</Link>
               <span className="text-gray-600">|</span>
               <Link href="/plan/log" className="text-sm text-gray-400 hover:text-white transition-colors">Training Log</Link>
+              <span className="text-gray-600">|</span>
+              <Link href="/plan/coach" className="text-sm text-brand-orange hover:text-orange-400 transition-colors font-medium">AI Coach</Link>
             </div>
           </div>
           <div className="flex items-center gap-6 text-sm text-gray-400">
