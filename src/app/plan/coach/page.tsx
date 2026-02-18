@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 
 interface Message {
@@ -69,11 +70,19 @@ export default function CoachPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-brand-black text-white py-6 px-4">
+      <div className="bg-brand-black text-white py-4 px-4">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="font-heading font-bold text-2xl">AI Coach</h1>
-            <p className="text-gray-400 text-sm mt-0.5">Ask about your training or make changes to your plan</p>
+          <div className="flex items-center gap-3">
+            <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-brand-orange">
+              <Image src="/images/coach-eva.jpg" alt="Coach Eva" fill className="object-cover object-top" sizes="40px" />
+            </div>
+            <div>
+              <h1 className="font-heading font-bold text-lg leading-none">Coach Eva</h1>
+              <div className="flex items-center gap-1 mt-0.5">
+                <div className="w-1.5 h-1.5 bg-green-400 rounded-full" />
+                <span className="text-[11px] text-gray-400">Online</span>
+              </div>
+            </div>
           </div>
           <Link href="/plan" className="text-sm text-gray-400 hover:text-white transition-colors">
             ← Back to plan
@@ -97,13 +106,11 @@ export default function CoachPage() {
       <div className="flex-1 max-w-2xl w-full mx-auto px-4 py-6 space-y-4">
         {messages.length === 0 && (
           <div className="text-center py-12">
-            <div className="w-16 h-16 bg-brand-orange/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-brand-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
+            <div className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-brand-orange mx-auto mb-4">
+              <Image src="/images/coach-eva.jpg" alt="Coach Eva" fill className="object-cover object-top" sizes="80px" />
             </div>
-            <h2 className="font-heading font-semibold text-lg mb-1">Your AI Running Coach</h2>
-            <p className="text-gray-500 text-sm mb-6">Ask me anything about your training, recent runs, or make changes to your plan.</p>
+            <h2 className="font-heading font-bold text-xl mb-1">Hey, I&apos;m Coach Eva</h2>
+            <p className="text-gray-500 text-sm mb-6">Your personal AI running coach. Ask me anything about your training, recent runs, or make changes to your plan.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-md mx-auto">
               {STARTER_PROMPTS.map((prompt) => (
                 <button

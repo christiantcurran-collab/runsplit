@@ -128,15 +128,28 @@ const jsonLd = {
     },
     {
       "@type": "Offer",
-      name: "Pro",
+      name: "Pro Monthly",
       price: "4.99",
       priceCurrency: "GBP",
-      description: "AI training plans, Strava sync, weekly summaries, race strategy",
+      description: "AI training plans, Strava sync, weekly summaries, race strategy — monthly billing",
       priceSpecification: {
         "@type": "UnitPriceSpecification",
         price: "4.99",
         priceCurrency: "GBP",
         billingDuration: "P1M",
+      },
+    },
+    {
+      "@type": "Offer",
+      name: "Pro Annual",
+      price: "35.88",
+      priceCurrency: "GBP",
+      description: "AI training plans, Strava sync, weekly summaries, race strategy — annual billing (£2.99/mo)",
+      priceSpecification: {
+        "@type": "UnitPriceSpecification",
+        price: "35.88",
+        priceCurrency: "GBP",
+        billingDuration: "P1Y",
       },
     },
   ],
@@ -152,7 +165,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? "G-02YQ2NRL09";
 
   return (
     <html lang="en">
