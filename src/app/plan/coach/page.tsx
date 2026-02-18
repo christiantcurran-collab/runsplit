@@ -74,10 +74,10 @@ export default function CoachPage() {
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-brand-orange">
-              <Image src="/images/coach-eva.jpg" alt="Coach Eva" fill className="object-cover object-top" sizes="40px" />
+              <Image src="/images/coach-eva.jpg" alt="Coach Erica" fill className="object-cover object-top" sizes="40px" />
             </div>
             <div>
-              <h1 className="font-heading font-bold text-lg leading-none">Coach Eva</h1>
+              <h1 className="font-heading font-bold text-lg leading-none">Coach Erica</h1>
               <div className="flex items-center gap-1 mt-0.5">
                 <div className="w-1.5 h-1.5 bg-green-400 rounded-full" />
                 <span className="text-[11px] text-gray-400">Online</span>
@@ -107,9 +107,9 @@ export default function CoachPage() {
         {messages.length === 0 && (
           <div className="text-center py-12">
             <div className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-brand-orange mx-auto mb-4">
-              <Image src="/images/coach-eva.jpg" alt="Coach Eva" fill className="object-cover object-top" sizes="80px" />
+              <Image src="/images/coach-eva.jpg" alt="Coach Erica" fill className="object-cover object-top" sizes="80px" />
             </div>
-            <h2 className="font-heading font-bold text-xl mb-1">Hey, I&apos;m Coach Eva</h2>
+            <h2 className="font-heading font-bold text-xl mb-1">Hey, I&apos;m Coach Erica</h2>
             <p className="text-gray-500 text-sm mb-6">Your personal AI running coach. Ask me anything about your training, recent runs, or make changes to your plan.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-md mx-auto">
               {STARTER_PROMPTS.map((prompt) => (
