@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import CheckoutButton from "@/components/CheckoutButton";
 
@@ -14,6 +14,7 @@ export default function SubscriptionGate({ children, fallback }: SubscriptionGat
   const { user, profile, loading, refreshProfile } = useAuth();
   const [retryingProfile, setRetryingProfile] = useState(false);
   const [profileRetryAttempted, setProfileRetryAttempted] = useState(false);
+  const stripeVerifyAttempted = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -24,8 +25,8 @@ export default function SubscriptionGate({ children, fallback }: SubscriptionGat
       try {
         await refreshProfile();
       } finally {
+        setRetryingProfile(false); // always clear — prevents permanent spinner if AuthProvider fetched profile first
         if (!cancelled) {
-          setRetryingProfile(false);
           setProfileRetryAttempted(true);
         }
       }
@@ -36,6 +37,23 @@ export default function SubscriptionGate({ children, fallback }: SubscriptionGat
       cancelled = true;
     };
   }, [loading, user, profile, profileRetryAttempted, refreshProfile]);
+
+  // If user has a stripe_customer_id but isn't Pro, verify with Stripe directly
+  useEffect(() => {
+    if (loading || !user || !profile || stripeVerifyAttempted.current) return;
+    const isPro = profile.subscription_status === "active" || profile.subscription_status === "trialing";
+    if (isPro || !profile.stripe_customer_id) return;
+
+    stripeVerifyAttempted.current = true;
+    fetch("/api/verify-subscription", { method: "POST" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "active" || data.status === "trialing") {
+          refreshProfile();
+        }
+      })
+      .catch(console.error);
+  }, [loading, user, profile, refreshProfile]);
 
   if (loading || retryingProfile) {
     return (
@@ -105,7 +123,7 @@ export default function SubscriptionGate({ children, fallback }: SubscriptionGat
           {/* Pricing highlight */}
           <div className="bg-bg-card border border-[#E4E4E8] rounded-xl p-5 mb-6 max-w-sm mx-auto">
             <div className="flex items-center justify-center gap-3 mb-3">
-              <span className="font-heading font-extrabold text-3xl text-text-primary">&pound;4.99</span>
+              <span className="font-heading font-extrabold text-3xl text-text-primary">from &pound;2.99</span>
               <span className="text-text-muted text-sm">/month</span>
             </div>
             <ul className="text-sm text-text-secondary space-y-1.5 text-left">
