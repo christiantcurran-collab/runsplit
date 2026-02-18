@@ -10,6 +10,34 @@ interface Message {
   content: string;
 }
 
+// Tries to show Eva's photo; falls back to a styled circle if the file isn't placed yet
+function EvaAvatar({ size, className = "" }: { size: number; className?: string }) {
+  const [imgError, setImgError] = useState(false);
+  const dim = `${size}px`;
+  if (imgError) {
+    return (
+      <div
+        className={`flex items-center justify-center rounded-full bg-gradient-to-br from-brand-orange to-orange-600 text-white font-heading font-bold flex-shrink-0 ${className}`}
+        style={{ width: dim, height: dim, fontSize: size * 0.38 }}
+      >
+        E
+      </div>
+    );
+  }
+  return (
+    <div className={`relative rounded-full overflow-hidden flex-shrink-0 ${className}`} style={{ width: dim, height: dim }}>
+      <Image
+        src="/images/coach-eva.jpg"
+        alt="Coach Eva"
+        fill
+        className="object-cover object-top"
+        sizes={dim}
+        onError={() => setImgError(true)}
+      />
+    </div>
+  );
+}
+
 const STARTER_PROMPTS = [
   "What's my workout today?",
   "Am I on track for my goal?",
@@ -97,15 +125,7 @@ export default function CoachBubble() {
           {/* Header */}
           <div className="bg-brand-black text-white px-4 py-3 flex items-center justify-between flex-shrink-0 safe-top">
             <div className="flex items-center gap-3">
-              <div className="relative w-9 h-9 rounded-full overflow-hidden flex-shrink-0 border-2 border-brand-orange">
-                <Image
-                  src="/images/coach-eva.jpg"
-                  alt="Coach Eva"
-                  fill
-                  className="object-cover object-top"
-                  sizes="36px"
-                />
-              </div>
+              <EvaAvatar size={36} className="border-2 border-brand-orange" />
               <div>
                 <div className="font-heading font-bold text-sm leading-none">Coach Eva</div>
                 <div className="flex items-center gap-1 mt-0.5">
@@ -143,15 +163,7 @@ export default function CoachBubble() {
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 min-h-0">
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full text-center pb-8">
-                <div className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-brand-orange mb-4 flex-shrink-0">
-                  <Image
-                    src="/images/coach-eva.jpg"
-                    alt="Coach Eva"
-                    fill
-                    className="object-cover object-top"
-                    sizes="80px"
-                  />
-                </div>
+                <EvaAvatar size={80} className="border-4 border-brand-orange mb-4" />
                 <h2 className="font-heading font-bold text-xl mb-1">Hey, I&apos;m Coach Eva</h2>
                 <p className="text-gray-500 text-sm mb-6 max-w-xs">
                   Your personal AI running coach. Ask me anything about your training or make changes to your plan.
@@ -173,9 +185,7 @@ export default function CoachBubble() {
             {messages.map((msg, i) => (
               <div key={i} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start items-end"}`}>
                 {msg.role === "assistant" && (
-                  <div className="relative w-7 h-7 rounded-full overflow-hidden flex-shrink-0 border border-brand-orange/50">
-                    <Image src="/images/coach-eva.jpg" alt="Eva" fill className="object-cover object-top" sizes="28px" />
-                  </div>
+                  <EvaAvatar size={28} className="border border-brand-orange/50" />
                 )}
                 <div
                   className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
@@ -191,9 +201,7 @@ export default function CoachBubble() {
 
             {loading && (
               <div className="flex gap-2 justify-start items-end">
-                <div className="relative w-7 h-7 rounded-full overflow-hidden flex-shrink-0 border border-brand-orange/50">
-                  <Image src="/images/coach-eva.jpg" alt="Eva" fill className="object-cover object-top" sizes="28px" />
-                </div>
+                <EvaAvatar size={28} className="border border-brand-orange/50" />
                 <div className="bg-gray-100 rounded-2xl rounded-bl-sm px-4 py-3">
                   <div className="flex gap-1 items-center">
                     <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
@@ -235,16 +243,10 @@ export default function CoachBubble() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 overflow-hidden border-2 border-brand-orange"
+          className="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 border-2 border-brand-orange overflow-hidden"
           aria-label="Chat with Coach Eva"
         >
-          <Image
-            src="/images/coach-eva.jpg"
-            alt="Coach Eva"
-            fill
-            className="object-cover object-top"
-            sizes="64px"
-          />
+          <EvaAvatar size={64} />
         </button>
       )}
     </>
