@@ -10,6 +10,7 @@ interface ResultCardProps {
   large?: boolean;
   trend?: "up" | "down" | "neutral";
   delay?: number;
+  onClick?: () => void;
 }
 
 export default function ResultCard({
@@ -20,6 +21,7 @@ export default function ResultCard({
   large = false,
   trend,
   delay = 0,
+  onClick,
 }: ResultCardProps) {
   return (
     <motion.div
@@ -27,7 +29,8 @@ export default function ResultCard({
         highlight
           ? "bg-white border-2 border-brand shadow-glow"
           : "bg-white border border-[#E4E4E8] shadow-sm"
-      }`}
+      } ${onClick ? "cursor-pointer" : ""}`}
+      onClick={onClick}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut", delay }}

@@ -22,6 +22,7 @@ export default function PredictTool() {
   const [targetCustom, setTargetCustom] = useState(42195);
   const [experience, setExperience] = useState<"beginner" | "intermediate" | "advanced">("intermediate");
   const [unit, setUnit] = useState<"km" | "mile">("km");
+  const [selectedModel, setSelectedModel] = useState<"riegel" | "cameron" | "conservative" | "aggressive">("riegel");
 
   const knownMeters = knownDistKey === "custom" ? knownCustom : DISTANCES[knownDistKey as DistanceKey].meters;
   const targetMeters = targetDistKey === "custom" ? targetCustom : DISTANCES[targetDistKey as DistanceKey].meters;
@@ -30,19 +31,24 @@ export default function PredictTool() {
 
   const results = useMemo(() => {
     if (totalSeconds <= 0 || knownMeters <= 0 || targetMeters <= 0) return null;
-    const riegel = predictRaceTime(knownMeters, totalSeconds, targetMeters, fatigueFactor);
-    const cameron = predictRaceTimeCameron(knownMeters, totalSeconds, targetMeters);
+    const riegelSec = predictRaceTime(knownMeters, totalSeconds, targetMeters, fatigueFactor);
+    const cameronSec = predictRaceTimeCameron(knownMeters, totalSeconds, targetMeters);
+    const conservativeSec = predictRaceTime(knownMeters, totalSeconds, targetMeters, 1.10);
+    const aggressiveSec = predictRaceTime(knownMeters, totalSeconds, targetMeters, 1.04);
     const allPredictions = Object.entries(DISTANCES).map(([, dist]) => ({
       name: dist.name,
       riegel: formatTimeFromSeconds(predictRaceTime(knownMeters, totalSeconds, dist.meters, fatigueFactor)),
       pace: formatTime(calculatePace(dist.meters, predictRaceTime(knownMeters, totalSeconds, dist.meters, fatigueFactor), unit)),
     }));
     return {
-      riegel: formatTimeFromSeconds(riegel),
-      cameron: formatTimeFromSeconds(cameron),
-      conservative: formatTimeFromSeconds(predictRaceTime(knownMeters, totalSeconds, targetMeters, 1.10)),
-      aggressive: formatTimeFromSeconds(predictRaceTime(knownMeters, totalSeconds, targetMeters, 1.04)),
-      riegelPace: formatTime(calculatePace(targetMeters, riegel, unit)),
+      riegel: formatTimeFromSeconds(riegelSec),
+      cameron: formatTimeFromSeconds(cameronSec),
+      conservative: formatTimeFromSeconds(conservativeSec),
+      aggressive: formatTimeFromSeconds(aggressiveSec),
+      riegelPace: formatTime(calculatePace(targetMeters, riegelSec, unit)),
+      cameronPace: formatTime(calculatePace(targetMeters, cameronSec, unit)),
+      conservativePace: formatTime(calculatePace(targetMeters, conservativeSec, unit)),
+      aggressivePace: formatTime(calculatePace(targetMeters, aggressiveSec, unit)),
       allPredictions,
     };
   }, [totalSeconds, knownMeters, targetMeters, fatigueFactor, unit]);
@@ -71,20 +77,21 @@ export default function PredictTool() {
 
   return (
     <ToolShell title="What Can I Run?" description="Predict your finish time for any race distance based on a recent result." currentPath="/tools/predict" inputs={inputs}
-      proCta={results ? `Want a training plan for a ${results.riegel} ${targetName}?` : undefined}>
+      proCta={results ? `Want a training plan for a ${results[selectedModel]} ${targetName}?` : undefined}>
       {results ? (
         <>
           <div className="text-center mb-8">
             <span className="text-xs font-medium text-text-muted uppercase tracking-wider">Predicted {targetName}</span>
-            <div className="mt-2"><RaceTime value={results.riegel} size="xl" /></div>
-            <p className="text-sm text-text-secondary mt-2">Pace: {results.riegelPace}/{unit}</p>
+            <div className="mt-2"><RaceTime value={results[selectedModel]} size="xl" /></div>
+            <p className="text-sm text-text-secondary mt-2">Pace: {results[`${selectedModel}Pace` as "riegelPace" | "cameronPace" | "conservativePace" | "aggressivePace"]}/{unit}</p>
+            <p className="text-xs text-text-muted mt-1">Tap a model below to compare</p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-            <ResultCard label="Riegel" value={results.riegel} highlight sublabel="Standard formula" />
-            <ResultCard label="Cameron" value={results.cameron} sublabel="Alternative model" delay={0.05} />
-            <ResultCard label="Conservative" value={results.conservative} sublabel="Beginner factor" delay={0.1} />
-            <ResultCard label="Aggressive" value={results.aggressive} sublabel="Advanced factor" delay={0.15} />
+            <ResultCard label="Riegel" value={results.riegel} highlight={selectedModel === "riegel"} sublabel="Standard formula" onClick={() => setSelectedModel("riegel")} />
+            <ResultCard label="Cameron" value={results.cameron} highlight={selectedModel === "cameron"} sublabel="Alternative model" delay={0.05} onClick={() => setSelectedModel("cameron")} />
+            <ResultCard label="Conservative" value={results.conservative} highlight={selectedModel === "conservative"} sublabel="Beginner factor" delay={0.1} onClick={() => setSelectedModel("conservative")} />
+            <ResultCard label="Aggressive" value={results.aggressive} highlight={selectedModel === "aggressive"} sublabel="Advanced factor" delay={0.15} onClick={() => setSelectedModel("aggressive")} />
           </div>
 
           <h3 className="font-heading font-semibold text-base text-text-primary mb-4">All Distance Predictions</h3>

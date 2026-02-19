@@ -31,17 +31,13 @@ export async function GET(request: Request) {
     const { error, data } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data.user) {
-      // Fire welcome email for new users (non-blocking)
-      const isNewUser =
-        data.user.created_at &&
-        Date.now() - new Date(data.user.created_at).getTime() < 60_000; // created within last 60s
-      if (isNewUser) {
-        fetch(`${siteUrl}/api/email/welcome`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: data.user.id }),
-        }).catch((err) => console.error("Welcome email trigger failed:", err));
-      }
+      // Always attempt welcome email — dedup is handled server-side via email_log table
+      // (the 60-second isNewUser check was too strict: email/password users verify hours later)
+      fetch(`${siteUrl}/api/email/welcome`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: data.user.id }),
+      }).catch((err) => console.error("Welcome email trigger failed:", err));
 
       if (redirect) {
         return NextResponse.redirect(`${siteUrl}${redirect}`);

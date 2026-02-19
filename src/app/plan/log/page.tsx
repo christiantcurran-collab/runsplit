@@ -5,6 +5,14 @@ import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { createClient } from "@/lib/supabase";
 import type { TrainingLogEntry } from "@/types";
+
+// Extends TrainingLogEntry with optional Strava-specific display fields
+type CombinedLogEntry = TrainingLogEntry & {
+  _source: "manual" | "strava";
+  strava_name?: string | null;
+  avg_hr?: number | null;
+  elevation_gain?: number | null;
+};
 import {
   formatTimeFromSeconds,
   estimateVO2max,
@@ -25,7 +33,7 @@ function formatPace(seconds: number): string {
 export default function TrainingLogPage() {
   const { user } = useAuth();
   const supabase = createClient();
-  const [logs, setLogs] = useState<TrainingLogEntry[]>([]);
+  const [logs, setLogs] = useState<CombinedLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [activeTab, setActiveTab] = useState<"analytics" | "log">("analytics");
@@ -48,13 +56,50 @@ export default function TrainingLogPage() {
   }, [user]);
 
   async function loadLogs() {
-    const { data } = await supabase
-      .from("training_log")
-      .select("*")
-      .eq("user_id", user!.id)
-      .order("date", { ascending: false })
-      .limit(200);
-    setLogs(data || []);
+    const [{ data: manualData }, { data: stravaData }] = await Promise.all([
+      supabase
+        .from("training_log")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("date", { ascending: false })
+        .limit(200),
+      supabase
+        .from("strava_activities")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("start_date", { ascending: false })
+        .limit(200),
+    ]);
+
+    const manual: CombinedLogEntry[] = (manualData || []).map((l) => ({
+      ...l,
+      _source: "manual" as const,
+    }));
+
+    const strava: CombinedLogEntry[] = (stravaData || []).map((a) => ({
+      id: a.id,
+      user_id: a.user_id,
+      plan_id: null,
+      planned_workout_id: null,
+      date: a.start_date ? a.start_date.split("T")[0] : new Date().toISOString().split("T")[0],
+      distance_meters: a.distance_meters,
+      time_seconds: a.moving_time_seconds,
+      workout_type: a.activity_type?.toLowerCase().replace("run", "easy") || "easy",
+      notes: null,
+      perceived_effort: null,
+      completed: true,
+      created_at: a.synced_at,
+      _source: "strava" as const,
+      strava_name: a.name,
+      avg_hr: a.average_heartrate,
+      elevation_gain: a.total_elevation_gain,
+    }));
+
+    const merged = [...manual, ...strava].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    setLogs(merged);
     setLoading(false);
   }
 
@@ -82,6 +127,7 @@ export default function TrainingLogPage() {
   };
 
   const handleDelete = async (id: string) => {
+    // Only manual log entries can be deleted; Strava activities are managed via Strava settings
     await supabase.from("training_log").delete().eq("id", id);
     setLogs((prev) => prev.filter((l) => l.id !== id));
   };
@@ -291,7 +337,7 @@ export default function TrainingLogPage() {
                   : "text-gray-400 hover:text-white hover:bg-white/5"
               }`}
             >
-              Run Log ({logs.length})
+              Run Log ({logs.length}){logs.some(l => l._source === "strava") ? " · incl. Strava" : ""}
             </button>
           </div>
         </div>
@@ -551,12 +597,19 @@ export default function TrainingLogPage() {
                         </div>
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
-                          {log.workout_type && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {log._source === "strava" && (
+                            <span className="text-[10px] font-bold uppercase tracking-wide bg-[#FC4C02] text-white px-1.5 py-0.5 rounded">
+                              Strava
+                            </span>
+                          )}
+                          {log._source === "strava" && log.strava_name ? (
+                            <span className="text-sm font-medium text-gray-700">{log.strava_name}</span>
+                          ) : log.workout_type ? (
                             <span className="text-xs font-medium capitalize bg-gray-100 px-2 py-0.5 rounded">
                               {log.workout_type.replace("_", " ")}
                             </span>
-                          )}
+                          ) : null}
                           {log.distance_meters && (
                             <span className="font-mono font-bold text-sm">
                               {(log.distance_meters / 1000).toFixed(1)}km
@@ -576,33 +629,49 @@ export default function TrainingLogPage() {
                             </span>
                           )}
                         </div>
-                        {log.notes && (
-                          <p className="text-xs text-gray-500 mt-0.5">{log.notes}</p>
-                        )}
+                        <div className="flex items-center gap-3 mt-0.5">
+                          {log.notes && (
+                            <p className="text-xs text-gray-500">{log.notes}</p>
+                          )}
+                          {log._source === "strava" && (log as CombinedLogEntry).elevation_gain != null && (
+                            <p className="text-xs text-gray-400">
+                              ↑ {Math.round((log as CombinedLogEntry).elevation_gain!)}m
+                            </p>
+                          )}
+                          {log._source === "strava" && (log as CombinedLogEntry).avg_hr != null && (
+                            <p className="text-xs text-gray-400">
+                              ♥ {Math.round((log as CombinedLogEntry).avg_hr!)} bpm
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
                       {log.perceived_effort && (
                         <div className="text-xs text-gray-400">RPE {log.perceived_effort}</div>
                       )}
-                      <button
-                        onClick={() => handleDelete(log.id)}
-                        className="text-gray-300 hover:text-red-500 transition-colors"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                      {log._source === "manual" ? (
+                        <button
+                          onClick={() => handleDelete(log.id)}
+                          className="text-gray-300 hover:text-red-500 transition-colors"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                      </button>
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      ) : (
+                        <div className="w-4 h-4" />
+                      )}
                     </div>
                   </div>
                 ))}

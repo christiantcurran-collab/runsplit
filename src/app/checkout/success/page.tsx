@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
+import { analytics } from "@/lib/analytics";
 
 export default function CheckoutSuccessPage() {
   return (
@@ -41,6 +42,10 @@ function CheckoutSuccessContent() {
           if (data.status === "active" || data.status === "trialing") {
             // Refresh profile so AuthProvider has latest subscription_status
             try { await refreshProfile(); } catch { /* non-critical */ }
+            // Fire GA4 / Google Ads purchase conversion
+            const plan = searchParams.get("plan") as "monthly" | "annual" | null;
+            const valuePence = plan === "annual" ? 3588 : 499;
+            analytics.subscriptionCompleted(plan ?? "monthly", valuePence);
             setStatus("success");
             // Small delay so user sees the success state
             setTimeout(() => { window.location.href = "/plan"; }, 1500);

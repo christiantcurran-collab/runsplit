@@ -66,6 +66,24 @@ export const analytics = {
   // Hero interaction
   heroCalculatorUsed: (distance: string) =>
     trackEvent("hero_calculator_used", "Engagement", distance),
+
+  // Google Ads conversion events
+  signupCompleted: (method: string) =>
+    trackEvent("sign_up", "Auth", method),
+
+  subscriptionStarted: (plan: "monthly" | "annual") =>
+    trackEvent("begin_checkout", "Conversion", plan),
+
+  subscriptionCompleted: (plan: "monthly" | "annual", valuePence: number) => {
+    if (typeof window !== "undefined" && window.gtag) {
+      window.gtag("event", "purchase", {
+        transaction_id: Date.now().toString(),
+        value: valuePence / 100,
+        currency: "GBP",
+        items: [{ item_name: `RunSplit Pro ${plan}`, price: valuePence / 100 }],
+      });
+    }
+  },
 };
 
 
